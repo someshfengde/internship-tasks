@@ -1,0 +1,230 @@
+678     71
+719     63
+967     51
+2138    48
+1565    47
+        ..
+1397     1
+1444     1
+1454     1
+864      1
+297      1
+Name: ApId, Length: 422, dtype: int64
+total len ApId = 6203
+E8:6F:38:29:FD:E9    19
+70:6D:EC:FE:01:FD    19
+1C:7E:E5:5A:DA:C1    18
+72:6D:EC:0A:8A:14    18
+70:6D:EC:0A:8A:14    17
+                     ..
+F4:DE:AF:00:04:1C     1
+DC:2C:6E:0E:19:76     1
+D8:0D:17:E4:33:BB     1
+70:6D:EC:0A:8C:A3     1
+48:BA:4E:D5:3A:A9     1
+Name: NApMacAddress, Length: 2621, dtype: int64
+total len NApMacAddress = 6203
+2022-04-10 15:40:29    119
+2022-04-10 16:00:27    102
+2022-04-10 15:38:48     81
+2022-04-06 11:20:48     71
+2022-04-10 15:40:24     69
+                      ... 
+2022-04-07 03:39:50      1
+2022-04-11 11:44:16      1
+2022-04-08 06:45:15      1
+2022-04-10 07:35:18      1
+2022-04-05 04:46:18      1
+Name: LastCheckinTime, Length: 383, dtype: int64
+total len LastCheckinTime = 6203
+15437860    71
+15529754    63
+15380236    48
+15587861    47
+15476190    45
+            ..
+1295657      1
+15690531     1
+1338048      1
+1335192      1
+1275036      1
+Name: LastStatusId, Length: 439, dtype: int64
+total len LastStatusId = 6203
+SAYAJI HOTEL            489
+JioPrivateNet           451
+AGindus.net             203
+Bhanwar Singh Palace    189
+Kyriad Pimpri           188
+                       ... 
+VLAN200_Parle             1
+Drawing-Room-2G           1
+Gurmeet Singh 2.4         1
+CTECH                     1
+Minitek_test              1
+Name: SSID, Length: 1344, dtype: int64
+total len SSID = 6203
+0               25
+73933184         6
+70656384         5
+7065984          5
+74137984         5
+                ..
+91404691         1
+90469594         1
+811583671660     1
+92562669         1
+605006027586     1
+Name: TSF, Length: 5869, dtype: int64
+total len TSF = 6203
+11     1644
+1      1600
+6       757
+10      231
+9       158
+36      156
+149     147
+2       135
+7       133
+52      131
+8       127
+4       103
+3        99
+165      99
+13       90
+161      88
+5        85
+40       71
+153      65
+44       65
+157      51
+48       34
+60       24
+64       18
+132      15
+116      11
+12       11
+100      10
+108       9
+56        9
+169       8
+140       6
+128       5
+136       3
+144       3
+104       1
+124       1
+Name: Frequency, dtype: int64
+total len Frequency = 6203
+-84     177
+-85     175
+-86     172
+-81     171
+-75     161
+       ... 
+-102      1
+-104      1
+-103      1
+-2        1
+-8        1
+Name: Rssi, Length: 103, dtype: int64
+total len Rssi = 6203
+11     1604
+1      1545
+6       735
+127     488
+10      218
+0       185
+9       156
+36      154
+2       131
+52      131
+8       127
+7       110
+4       103
+3        98
+5        83
+13       73
+40       69
+44       65
+48       34
+60       24
+64       18
+116      11
+12       11
+100      10
+56        9
+108       9
+104       1
+124       1
+Name: PrimaryChannel, dtype: int64
+total len PrimaryChannel = 6203
+0    6203
+Name: SecondaryChannel, dtype: int64
+total len SecondaryChannel = 6203
+0.0    754
+1.0    451
+Name: ChannelWidth, dtype: int64
+total len ChannelWidth = 6203
+20     4679
+any    1339
+Name: StaChannelWidth, dtype: int64
+total len StaChannelWidth = 6203
+0.0      365
+42.0     172
+155.0    128
+58.0     116
+165.0     96
+161.0     69
+157.0     42
+153.0     41
+48.0      21
+138.0     15
+52.0      13
+149.0     12
+106.0     12
+159.0     11
+122.0      9
+36.0       9
+169.0      8
+40.0       8
+140.0      6
+44.0       6
+56.0       6
+128.0      5
+108.0      5
+46.0       3
+38.0       3
+60.0       3
+54.0       3
+144.0      3
+136.0      3
+62.0       2
+116.0      2
+1.0        2
+9.0        2
+3.0        1
+124.0      1
+11.0       1
+110.0      1
+Name: FirstCenterFrequency, dtype: int64
+total len FirstCenterFrequency = 6203
+0.0    1205
+Name: SecondCenterFrequency, dtype: int64
+total len SecondCenterFrequency = 6203
+PSK                     3778
+IEEE 802.1X              503
+IEEE 802.1X FT/IEEE       45
+PSK PSK/SHA-256           39
+PSK FT/PSK                25
+IEEE 802.1X IEEE 802      23
+PSK 00-0f-ac:8             8
+PSK FT/PSK PSK/SHA-2       6
+PSK SAE                    2
+Name: Authentication, dtype: int64
+total len Authentication = 6203
+CCMP         2101
+CCMP TKIP    1940
+TKIP CCMP     364
+TKIP           24
+Name: Security, dtype: int64
+total len Security = 6203
