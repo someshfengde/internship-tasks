@@ -15,36 +15,36 @@ class clr:
     E = '\033[0m'
 
 # %%
-# reading the data from dataframe in this 
-# case I am combining the data I have. 
-scan_1 = pd.read_csv("nap-scan.csv")
-scan_2 = pd.read_csv("nap-scan-2.csv")
-cols = ["ApId",
-"NApMacAddress",
-"LastCheckinTime",
-"LastStatusId",         
-"SSID",                 
-"TSF",                  
-"Frequency",            
-"Rssi",                  
-"PrimaryChannel",       
-"SecondaryChannel",     
-"ChannelWidth",         
-"StaChannelWidth",      
-"FirstCenterFrequency", 
-"SecondCenterFrequency",
-"Authentication",       
-"Security"]
-scan_1.columns = cols
-# checking the column 
-print(scan_2[r'\N'].value_counts(), len(scan_2[r'\N']))
-# seems like the \N col is having only newline values dropping it 
-scan_2 = scan_2.drop(r"\N", axis = 1 ) 
-scan_2.columns = cols
-total_scan = scan_1.append(scan_2, ignore_index=True)
+# # reading the data from dataframe in this 
+# # case I am combining the data I have. 
+# scan_1 = pd.read_csv("nap-scan.csv")
+# scan_2 = pd.read_csv("nap-scan-2.csv")
+# cols = ["ApId",
+# "NApMacAddress",
+# "LastCheckinTime",
+# "LastStatusId",         
+# "SSID",                 
+# "TSF",                  
+# "Frequency",            
+# "Rssi",                  
+# "PrimaryChannel",       
+# "SecondaryChannel",     
+# "ChannelWidth",         
+# "StaChannelWidth",      
+# "FirstCenterFrequency", 
+# "SecondCenterFrequency",
+# "Authentication",       
+# "Security"]
+# scan_1.columns = cols
+# # checking the column 
+# print(scan_2[r'\N'].value_counts(), len(scan_2[r'\N']))
+# # seems like the \N col is having only newline values dropping it 
+# scan_2 = scan_2.drop(r"\N", axis = 1 ) 
+# scan_2.columns = cols
+# total_scan = scan_1.append(scan_2, ignore_index=True)
 
 # %%
-total_scan
+# total_scan
 # %%
 def draw_graph(id_ind,df):
     """
@@ -69,9 +69,9 @@ def draw_graph(id_ind,df):
     pos = nx.layout.spring_layout(G)
     nx.draw(G, with_labels=True, node_size=10, node_color='blue', edge_color='red', pos=pos)
 
-draw_graph(678, total_scan)
+# draw_graph(678, total_scan)
 
-# %%
+# # %%
 
-total_scan.query("ApId == 678")['Frequency'].value_counts()
+# total_scan.query("ApId == 678")['Frequency'].value_counts()
 # %%
