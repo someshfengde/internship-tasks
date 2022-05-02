@@ -46,7 +46,7 @@ class clr:
 # %%
 # total_scan
 # %%
-def draw_graph(id_ind,df):
+def draw_graph(id_ind,df, to_vis = "Rssi"):
     """
         Inputs: 
             id_ind APid which we want to visualize
@@ -62,7 +62,7 @@ def draw_graph(id_ind,df):
         print(clr.S + "dataframe doesn't contain any information about the node provided in inputs" + clr.E)
     G = nx.Graph()
     point_data = []
-    for x in data["Rssi"]:
+    for x in data[to_vis]:
         point_data.append((x,0))
     G.add_edges_from(point_data)
     plt.title(f"Graph of AP {id_ind}")
