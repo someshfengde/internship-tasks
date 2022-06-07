@@ -7,9 +7,12 @@
 import random
 import networkx as nx
 import matplotlib.pyplot as plt
+from tqdm import tqdm
+import numpy as np 
 
-NO_CHANNELS = 5
+NO_CHANNELS = 3
 DIST_BEFORE_INTERFERENCE = 10
+
 
 def input_data():
     """
@@ -20,13 +23,14 @@ def input_data():
     for i in range(no_of_aps):
         distances.append([])
         for j in range(no_of_aps):
-            if i == j : 
+            if i == j:
                 distances[i].append(0)
             else:
                 if j < i and distances[j][i] != 0:
                     distances[i].append(distances[j][i])
-                else: 
-                    distances[i].append(int(input("Enter the distance between AP"+str(i+1)+" and AP"+str(j+1)+": ")))
+                else:
+                    # distances[i].append(int(input("Enter the distance between AP"+str(i+1)+" and AP"+str(j+1)+": ")))
+                    distances[i].append(random.randint(1, 50))
     return no_of_aps, distances
 
 
@@ -45,33 +49,37 @@ def visualize(no_of_aps, distances):
     nx.draw_networkx_edges(G, pos, width=6)
 
     labels = {}
-    for u,v,data in G.edges(data=True):
-        labels[(u,v)] = data['weight']
-    nx.draw_networkx_labels(G, pos, font_size=20, font_family='sans-serif')
-    nx.draw_networkx_edge_labels(G,edge_labels=labels, pos=nx.spring_layout(G),font_size=10)
-    plt.axis('off')
+    for u, v, data in G.edges(data=True):
+        labels[(u, v)] = data["weight"]
+    nx.draw_networkx_labels(G, pos, font_size=20, font_family="sans-serif")
+    nx.draw_networkx_edge_labels(
+        G, edge_labels=labels, pos=nx.spring_layout(G), font_size=10
+    )
+    plt.axis("off")
     plt.show()
+
 
 def channel_allocation(no_of_aps, distances):
     """
-    allocating channel to every AP 
-        inputs: no_of_aps ( total no of AP we have) 
+    allocating channel to every AP
+        inputs: no_of_aps ( total no of AP we have)
         distances: the distances between each AP and the other AP's
     """
     allocated_channels = {}
     for i in range(no_of_aps):
-        allocated_channels[i] = (random.choice(range(NO_CHANNELS)))
+        allocated_channels[i] = random.choice(range(NO_CHANNELS)) + 1
     return allocated_channels
+
 
 #%%
 no_of_aps, distances = input_data()
 
-#%% 
+#%%
 visualize(no_of_aps, distances)
 #%%
 allocated_channels = channel_allocation(no_of_aps, distances)
 # %%
-#function for visualizing the channel allocation based on the graph showing colors according to allocated channels 
+# function for visualizing the channel allocation based on the graph showing colors according to allocated channels
 def visualize_channel_allocation(no_of_aps, allocated_channels, distances):
     """
     visualizing the channel allocation based on the graph showing colors according to allocated channels
@@ -81,14 +89,17 @@ def visualize_channel_allocation(no_of_aps, allocated_channels, distances):
     for i in range(no_of_aps):
         for j in range(no_of_aps):
             if distances[i][j] != 0:
-                G.add_edge(i, j, length = distances[i][j])
+                G.add_edge(i, j, length=distances[i][j])
     labels = {}
-    for u,v,data in G.edges(data=True):
-        labels[(u,v)] = data['length']
-    nx.draw_networkx_edge_labels(G,edge_labels=labels, pos=nx.spring_layout(G),font_size=10)
-    nx.draw(G,  labels = dict(allocated_channels), with_labels = True)
+    for u, v, data in G.edges(data=True):
+        labels[(u, v)] = data["length"]
+    nx.draw_networkx_edge_labels(
+        G, edge_labels=labels, pos=nx.spring_layout(G), font_size=10
+    )
+    nx.draw(G, labels=dict(allocated_channels), with_labels=True)
     plt.axis(False)
     plt.show()
+
 
 # %%
 visualize_channel_allocation(no_of_aps, allocated_channels, distances)
@@ -100,13 +111,48 @@ def interference(no_of_aps, allocated_channels, distances):
     """
     interference = 0
     for i in range(no_of_aps):
-        if list(allocated_channels.values()).count(allocated_channels[i]) > 1 : 
-            index = [i for i, x in enumerate(allocated_channels.values()) if x == allocated_channels[i]]
-            for j in index:
-                if distances[i][j] < DIST_BEFORE_INTERFERENCE:
-                    interference += 1
+        for j in range(no_of_aps):
+            if distances[i][j] < DIST_BEFORE_INTERFERENCE and allocated_channels[i] == allocated_channels[j]:
+                interference += 1
     return interference
 
 
 # %%
 interference(no_of_aps, allocated_channels, distances)
+
+# %%
+# function to optimize the channel allocation for minimizing interference
+def optimize_channel_allocation(no_of_aps, distances, allocated_channels):
+    """
+    optimizes the channel allocation for AP's
+        inputs:
+            no of aps
+            distances between the AP's
+            allocated_channels: the channels which are allocated randomly
+        output:
+            Optimized channel allocation
+    """
+
+    before_interference = interference(no_of_aps, allocated_channels, distances)
+    print(f"intereference before optimization {before_interference}")
+    temp_allocation = np.zeros(no_of_aps)
+
+    # assuming that the channels are not already allocated 
+    cur_channel  = 1 
+    for i in tqdm(range(no_of_aps)):
+        for j in range(no_of_aps):
+            if distances[i][j] < DIST_BEFORE_INTERFERENCE: 
+                temp_allocation[j] = cur_channel
+                cur_channel += 1 
+            if distances[i][j] == 0 : 
+                temp_allocation[i] = cur_channel
+                cur_channel += 1
+                break 
+        if cur_channel >= NO_CHANNELS:
+            cur_channel = 1
+    if before_interference > interference(no_of_aps, temp_allocation, distances):
+        print(f"intereference after optimization {interference(no_of_aps, temp_allocation, distances)} , decrease of {interference(no_of_aps, temp_allocation, distances) - before_interference}")
+        allocated_channels = temp_allocation
+    return allocated_channels
+# %%
+optimize_channel_allocation(no_of_aps, distances, allocated_channels)
