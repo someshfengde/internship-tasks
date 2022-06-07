@@ -8,7 +8,7 @@ import random
 import networkx as nx
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-import numpy as np 
+import numpy as np
 
 NO_CHANNELS = 3
 DIST_BEFORE_INTERFERENCE = 10
@@ -112,7 +112,10 @@ def interference(no_of_aps, allocated_channels, distances):
     interference = 0
     for i in range(no_of_aps):
         for j in range(no_of_aps):
-            if distances[i][j] < DIST_BEFORE_INTERFERENCE and allocated_channels[i] == allocated_channels[j]:
+            if (
+                distances[i][j] < DIST_BEFORE_INTERFERENCE
+                and allocated_channels[i] == allocated_channels[j]
+            ):
                 interference += 1
     return interference
 
@@ -137,22 +140,26 @@ def optimize_channel_allocation(no_of_aps, distances, allocated_channels):
     print(f"intereference before optimization {before_interference}")
     temp_allocation = np.zeros(no_of_aps)
 
-    # assuming that the channels are not already allocated 
-    cur_channel  = 1 
+    # assuming that the channels are not already allocated
+    cur_channel = 1
     for i in tqdm(range(no_of_aps)):
         for j in range(no_of_aps):
-            if distances[i][j] < DIST_BEFORE_INTERFERENCE: 
+            if distances[i][j] < DIST_BEFORE_INTERFERENCE:
                 temp_allocation[j] = cur_channel
-                cur_channel += 1 
-            if distances[i][j] == 0 : 
+                cur_channel += 1
+            if distances[i][j] == 0:
                 temp_allocation[i] = cur_channel
                 cur_channel += 1
-                break 
+                break
         if cur_channel >= NO_CHANNELS:
             cur_channel = 1
     if before_interference > interference(no_of_aps, temp_allocation, distances):
-        print(f"intereference after optimization {interference(no_of_aps, temp_allocation, distances)} , decrease of {interference(no_of_aps, temp_allocation, distances) - before_interference}")
+        print(
+            f"intereference after optimization {interference(no_of_aps, temp_allocation, distances)} , decrease of {abs(interference(no_of_aps, temp_allocation, distances) - before_interference)}"
+        )
         allocated_channels = temp_allocation
     return allocated_channels
+
+
 # %%
 optimize_channel_allocation(no_of_aps, distances, allocated_channels)
