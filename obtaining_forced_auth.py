@@ -32,3 +32,4 @@ ip_address = ip_addresses_through_mac(mac_ids)
 print(ip_address)
 #%%
 command_to_aps(ip_address)
+#%%
