@@ -5,7 +5,7 @@ import pandas as pd
 from new_file import * 
 
 
-mac_ids = ["72-6D-EC-0A-2E-B8","72-6D-EC-0A-27-48"]
+mac_ids = ["72-6D-EC-0A-27-48","72-6D-EC-0A-2E-B8"]#,,"70-6D-EC-0A-80-AC"
 # we will get JSON data through API 
 # search mac_ids in JSON data 
 def ip_addresses_through_mac(mac_ids):
