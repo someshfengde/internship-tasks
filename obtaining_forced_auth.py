@@ -5,7 +5,7 @@ import pandas as pd
 from new_file import * 
 
 
-mac_ids = ["72-6D-EC-0A-27-48","72-6D-EC-0A-2E-B8"]#,,"70-6D-EC-0A-80-AC"
+mac_ids = ["72-6D-EC-0A-27-48", "70-6D-EC-0A-80-AC"]#,"72-6D-EC-0A-2E-B8"]#,,"70-6D-EC-0A-80-AC"
 # we will get JSON data through API 
 # search mac_ids in JSON data 
 def ip_addresses_through_mac(mac_ids):
@@ -33,3 +33,11 @@ print(ip_address)
 #%%
 command_to_aps(ip_address)
 #%%
+def  update_system(ip_list,user = "root" , password ="openwifi" ):
+    client = ParallelSSHClient(ip_list, user = user , password = password)
+    output = client.run_command("cd /tmp && sysupgrade -n 20220202-indio_um-305ac-v2.4.1-6d9d4ab-upgrade.bin")
+    print_output(output)
+    output = client.run_command("reboot")
+update_system(ip_address)
+# %%
+update_system

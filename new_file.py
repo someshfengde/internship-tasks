@@ -1,4 +1,5 @@
 #%% 
+from flask import has_app_context
 from pssh.clients import ParallelSSHClient
 import hashlib
 import os
@@ -42,11 +43,15 @@ def  command_to_aps(ip_list,user = "root" , password ="openwifi" ):
     output = client.run_command("ls")
     print_output(output)
     hash_val = get_hash_from_server(client)
-    if verify_digest(filename = "/home/somesh/Downloads/20220202-indio_um-305ac-v2.4.1-6d9d4ab-upgrade.bin",digest = hash_val):
-        print("file is verified for integrity")
-    else:
-        client.run_command("rm -rf 20220202-indio_um-305ac-v2.4.1-6d9d4ab-upgrade.bin")
-        print("RETRY SENDING FILE!")
+    for idx , x in enumerate(hash_val):
+        if verify_digest(filename = "/home/somesh/Downloads/20220202-indio_um-305ac-v2.4.1-6d9d4ab-upgrade.bin",digest = x):
+            print(f"{ip_list[idx]} is authenticated")
+            print("file is verified for integrity")
+        else:
+            client.run_command("rm -rf 20220202-indio_um-305ac-v2.4.1-6d9d4ab-upgrade.bin")
+            # command_to_aps(ip_list,user = "root" , password ="openwifi")
+            print(f"{ip_list[idx]} is not authenticated")
+            print("RETRY SENDING FILE!")
     
 
 def get_hash_from_server(client , filename= "20220202-indio_um-305ac-v2.4.1-6d9d4ab-upgrade.bin"):
@@ -58,6 +63,7 @@ def get_hash_from_server(client , filename= "20220202-indio_um-305ac-v2.4.1-6d9d
             hash_values.append(line.split(" ")[0])
             break 
     print(hash_values)
-    return hash_values[0]
+    return hash_values
 # %%
- 
+
+        # command_to_aps(ip_list,user = "root" , password ="openwifi")
