@@ -1,11 +1,12 @@
 #%%
-import pandas as pd 
+import pandas as pd
 import numpy as np
-from pyparsing import col 
+from pyparsing import col
 
 
 # %%
 
+
 def read_and_return_data():
-    data = pd.read_csv("uc_client_logs (1).csv", sep = ",")
-    return data 
+    data = pd.read_csv("whole_data.csv", sep=",")
+    return data
