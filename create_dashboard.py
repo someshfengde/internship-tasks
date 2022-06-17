@@ -3,28 +3,19 @@ from fsspec import Callback
 import plotly.express as px
 import pandas as pd
 from data_prep import *
-
+from datetime import date
+import matplotlib.pyplot as plt
 # setting up the data
 from dash import Dash, dcc, html, Input, Output, dash_table
 import plotly.express as px
 import plotly.graph_objs as go
 
-# setting up the data
-data = read_and_return_data()
 
 # creatgin the local server
 app = Dash(
     __name__, external_stylesheets=["https://codepen.io/chriddyp/pen/bWLwgP.css"]
 )
 
-
-# grouping data  by Unique ClientMacAddress and averaging the other fields
-data_grouped = data.groupby(["ClientMacAddress"]).mean()
-data = data_grouped
-
-# converting bit per second to megabyptes per second
-data["RxRateBitrate"] = data["RxRateBitrate"] / 10000
-data["TxRateBitrate"] = data["TxRateBitrate"] / 10000
 
 
 app.layout = html.Div(
@@ -34,6 +25,15 @@ app.layout = html.Div(
             id="demo-dropdown",
             value="RxRateBitrate",
             inline=True,
+        ),
+        html.H2("Select range to visualize data"),
+        dcc.DatePickerRange(
+            id="my-date-picker-range",
+            min_date_allowed=date(2021, 9, 4),
+            max_date_allowed=date(2022, 6, 15),
+            initial_visible_month=date(2021, 9, 4),
+            start_date=date(2021, 9, 4),
+            end_date=date(2021, 12, 15),
         ),
         html.Div(
             [
@@ -52,24 +52,43 @@ app.layout = html.Div(
         html.H2("Select the threshhold value"),
         dcc.Slider(
             id="slider-input-to-graph",
-            min=data["RxRateBitrate"].min(),
-            max=data["RxRateBitrate"].max(),
-            value=data["RxRateBitrate"].mean(),
+            min=0,
+            max=90,
+            value=10,
             step=10,
         ),
         html.P("Dataframe"),
-        dash_table.DataTable(
-            data.to_dict("records"), [{"name": i, "id": i} for i in data.columns]
-        ),
     ]
 )
 
 
 @app.callback(
     Output("template-x-graph", "figure"),
-    [Input("demo-dropdown", "value"), Input("slider-input-to-graph", "value")],
+    [
+        Input("demo-dropdown", "value"),
+        Input("slider-input-to-graph", "value"),
+        Input("my-date-picker-range", "start_date"),
+        Input("my-date-picker-range", "end_date"),
+    ],
 )
-def change_graph(value, slider_val):
+def change_graph(value, slider_val, start_date, end_date):
+    command = f"select ClientMacAddress,RxRateBitrate,TxRateBitrate,RxRateChWidth,TxRateChWidth,TimeStamp from uc_client_logs WHERE TimeStamp BETWEEN '{start_date} 00:00:00' AND '{end_date} 23:59:59' "
+    data = execute_command(
+        command,
+        [
+            "ClientMacAddress",
+            "RxRateBitrate",
+            "TxRateBitrate",
+            "RxRateChWidth",
+            "TxRateChWidth",
+            "TimeStamp",
+        ],
+    )
+    data = preprocess_data(data)
+    # converting bit per second to megabyptes per second
+    data["RxRateBitrate"] = data["RxRateBitrate"] / 1000
+    data["TxRateBitrate"] = data["TxRateBitrate"] / 1000
+    # converting bit per second to megabyptes per second
     bit_rate_data = data[value].to_numpy()
     fig = px.histogram(bit_rate_data, x=bit_rate_data)  # , nbins=50)
     fig.update_layout(
@@ -88,10 +107,32 @@ def change_graph(value, slider_val):
 
 
 @app.callback(
-    Output("percentage-indicator", "figure"), [Input("slider-input-to-graph", "value")]
+    Output("percentage-indicator", "figure"),
+    [
+        Input("slider-input-to-graph", "value"),
+        Input("my-date-picker-range", "start_date"),
+        Input("my-date-picker-range", "end_date"),
+    ],
 )
-def show_percentage_devices(slider_val):
-    percentage_devices = len(data[data["RxRateBitrate"] > slider_val]) / len(data)
+def show_percentage_devices(slider_val, start_date, end_date):
+    command = f"select ClientMacAddress,RxRateBitrate,TxRateBitrate,RxRateChWidth,TxRateChWidth,TimeStamp from uc_client_logs WHERE TimeStamp BETWEEN '{start_date} 00:00:00' AND '{end_date} 23:59:59' "
+    data = execute_command(
+        command,
+        [
+            "ClientMacAddress",
+            "RxRateBitrate",
+            "TxRateBitrate",
+            "RxRateChWidth",
+            "TxRateChWidth",
+            "TimeStamp",
+        ],
+    )
+    data = preprocess_data(data)
+    # converting bit per second to megabyptes per second
+    data["RxRateBitrate"] = data["RxRateBitrate"] / 1000
+    data["TxRateBitrate"] = data["TxRateBitrate"] / 1000
+    print(data["TxRateBitrate"].value_counts())
+    percentage_devices = len(data[data["TxRateBitrate"] > slider_val]) / len(data)
     # creating plotly pie chart for showing the percentage of devices
     fig = px.pie(
         values=[percentage_devices, 1 - percentage_devices],
