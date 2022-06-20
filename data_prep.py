@@ -16,7 +16,7 @@ def read_and_return_data():
     data["TxRateBitrate"].replace([r"\N", r"\\N", r"\\N\\N"], np.nan, inplace=True)
     data["RxRateBitrate"].replace([r"\N", r"\\N", r"\\N\\N"], np.nan, inplace=True)
     data["TxRateBitrate"] = data["TxRateBitrate"].astype(float)
-    data["RxRateBitrate"] = data["RxRateBitrate"].astype(float)
+    data["RxBitRate"] = data["RxBitRate"].astype(float)
     return data
 
 
@@ -27,15 +27,16 @@ def connect_to_db():
         user="root",
         passwd="NewPassword",
         database="new_database",
-    )
+    )   
     return mydb
 
 
 def preprocess_data(data):
-    data["TxRateBitrate"].replace([r"\N", r"\\N", r"\\N\\N"], np.nan, inplace=True)
-    data["RxRateBitrate"].replace([r"\N", r"\\N", r"\\N\\N"], np.nan, inplace=True)
-    data["TxRateBitrate"] = data["TxRateBitrate"].astype(float)
-    data["RxRateBitrate"] = data["RxRateBitrate"].astype(float)
+    data["TxBitRate"].replace([r"\N", r"\\N", r"\\N\\N"], np.nan, inplace=True)
+    data["RxBitRate"].replace([r"\N", r"\\N", r"\\N\\N"], np.nan, inplace=True)
+    data["TxBitRate"] = data["TxBitRate"].astype(float)
+    data["RxBitRate"] = data["RxBitRate"].astype(float)
+
     return data
 
 # %%

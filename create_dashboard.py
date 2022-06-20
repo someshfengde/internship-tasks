@@ -5,6 +5,7 @@ import pandas as pd
 from data_prep import *
 from datetime import date
 import matplotlib.pyplot as plt
+
 # setting up the data
 from dash import Dash, dcc, html, Input, Output, dash_table
 import plotly.express as px
@@ -17,23 +18,23 @@ app = Dash(
 )
 
 
-
 app.layout = html.Div(
     [
+        html.H1("Dashboards for ap_status_rfclients"),
         dcc.RadioItems(
-            ["RxRateBitrate", "TxRateBitrate"],
+            ["RxBitRate", "TxBitRate","Throughput"],
             id="demo-dropdown",
-            value="RxRateBitrate",
+            value="RxBitRate",
             inline=True,
         ),
         html.H2("Select range to visualize data"),
         dcc.DatePickerRange(
             id="my-date-picker-range",
-            min_date_allowed=date(2021, 9, 4),
-            max_date_allowed=date(2022, 6, 15),
-            initial_visible_month=date(2021, 9, 4),
-            start_date=date(2021, 9, 4),
-            end_date=date(2021, 12, 15),
+            min_date_allowed=date(2022, 6, 7),
+            max_date_allowed=date(2022, 6, 16),
+            initial_visible_month=date(2022, 6, 7),
+            start_date=date(2022, 6, 7),
+            end_date=date(2022, 6, 16),
         ),
         html.Div(
             [
@@ -57,13 +58,25 @@ app.layout = html.Div(
             value=10,
             step=10,
         ),
-        html.P("Dataframe"),
+        html.H1("Observed metric values"),
+        html.Div(id="min-value"),
+        html.Div(id="max-value"),
+        html.Div(id="std-value"),
+        html.Div(id="mean-value"),
+        html.Div(id="median-value"),
     ]
 )
 
 
 @app.callback(
-    Output("template-x-graph", "figure"),
+    [
+        Output("template-x-graph", "figure"),
+        Output("min-value", "children"),
+        Output("max-value", "children"),
+        Output("std-value", "children"),
+        Output("mean-value", "children"),
+        Output("median-value", "children"),
+    ],
     [
         Input("demo-dropdown", "value"),
         Input("slider-input-to-graph", "value"),
@@ -72,22 +85,17 @@ app.layout = html.Div(
     ],
 )
 def change_graph(value, slider_val, start_date, end_date):
-    command = f"select ClientMacAddress,RxRateBitrate,TxRateBitrate,RxRateChWidth,TxRateChWidth,TimeStamp from uc_client_logs WHERE TimeStamp BETWEEN '{start_date} 00:00:00' AND '{end_date} 23:59:59' "
+    command = f"select MacAddress,RxBitRate,TxBitRate,CheckinTime,Throughput,AssociatedFrequency from ap_status_rfclients WHERE CheckinTime BETWEEN '{start_date} 00:00:00' AND '{end_date} 23:59:59' "
     data = execute_command(
         command,
-        [
-            "ClientMacAddress",
-            "RxRateBitrate",
-            "TxRateBitrate",
-            "RxRateChWidth",
-            "TxRateChWidth",
-            "TimeStamp",
-        ],
+        ["MacAddress", "RxBitRate", "TxBitRate", "CheckinTime","Throughput","AssociatedFrequency"],
     )
     data = preprocess_data(data)
-    # converting bit per second to megabyptes per second
-    data["RxRateBitrate"] = data["RxRateBitrate"] / 1000
-    data["TxRateBitrate"] = data["TxRateBitrate"] / 1000
+
+    print(f"{data['AssociatedFrequency'].value_counts()}")
+    # # converting bit per second to megabyptes per second
+    # data["RxBitRate"] = data["RxBitRate"] / 1000
+    # data["TxBitRate"] = data["TxBitRate"] / 1000
     # converting bit per second to megabyptes per second
     bit_rate_data = data[value].to_numpy()
     fig = px.histogram(bit_rate_data, x=bit_rate_data)  # , nbins=50)
@@ -103,36 +111,36 @@ def change_graph(value, slider_val, start_date, end_date):
         line_dash="dash",
         name="slider_val",
     )
-    return fig
+    return (
+        fig,
+        f"minimum {value} is {data[value].min()}",
+        f"maximum for {value} is{data[value].max()}",
+        f"standard deviation in {value} is {data[value].std()}",
+        f"mean for {value} is {data[value].mean()}",
+        f"median for {value} is {data[value].median()}",
+    )
 
 
 @app.callback(
     Output("percentage-indicator", "figure"),
     [
+        Input("demo-dropdown", "value"),
         Input("slider-input-to-graph", "value"),
         Input("my-date-picker-range", "start_date"),
         Input("my-date-picker-range", "end_date"),
     ],
 )
-def show_percentage_devices(slider_val, start_date, end_date):
-    command = f"select ClientMacAddress,RxRateBitrate,TxRateBitrate,RxRateChWidth,TxRateChWidth,TimeStamp from uc_client_logs WHERE TimeStamp BETWEEN '{start_date} 00:00:00' AND '{end_date} 23:59:59' "
+def show_percentage_devices(selected_val, slider_val, start_date, end_date):
+    command = f"select MacAddress,RxBitRate,TxBitRate,CheckinTime from ap_status_rfclients WHERE CheckinTime BETWEEN '{start_date} 00:00:00' AND '{end_date} 23:59:59' "
     data = execute_command(
         command,
-        [
-            "ClientMacAddress",
-            "RxRateBitrate",
-            "TxRateBitrate",
-            "RxRateChWidth",
-            "TxRateChWidth",
-            "TimeStamp",
-        ],
+        ["MacAddress", "RxBitRate", "TxBitRate", "CheckinTime"],
     )
     data = preprocess_data(data)
     # converting bit per second to megabyptes per second
-    data["RxRateBitrate"] = data["RxRateBitrate"] / 1000
-    data["TxRateBitrate"] = data["TxRateBitrate"] / 1000
-    print(data["TxRateBitrate"].value_counts())
-    percentage_devices = len(data[data["TxRateBitrate"] > slider_val]) / len(data)
+    # data["RxBitRate"] = data["RxBitRate"] / 1000
+    # data["TxBitRate"] = data["TxBitRate"] / 1000
+    percentage_devices = len(data[data[selected_val] > slider_val]) / len(data)
     # creating plotly pie chart for showing the percentage of devices
     fig = px.pie(
         values=[percentage_devices, 1 - percentage_devices],
@@ -144,3 +152,6 @@ def show_percentage_devices(slider_val, start_date, end_date):
 
 if __name__ == "__main__":
     app.run_server(debug=True)
+
+
+
