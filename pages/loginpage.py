@@ -41,7 +41,8 @@ submit_button = dbc.Row(
 # form = dbc.Form([email_input, password_input ,submit_button], id = "form_input")
 
 
-form = dbc.Row(
+form = (
+    dbc.Row(
         [
             dbc.Label("Email"),
             dbc.Row(
@@ -57,6 +58,7 @@ form = dbc.Row(
         ],
         className="g-2",
     ),
+)
 
 
 layout = html.Div(
@@ -98,16 +100,14 @@ def connect_to_db(username="root", password="NewPassword"):
 )
 def handle_submit(username, password, clicked):
     print(f"username and password we are getting {username},  {password}")
-    data_dum = {"username" : None , "password" :None }
+    data_dum = {"username": None, "password": None}
     if clicked:
         print("clicked")
         db, connection = connect_to_db(username, password)
         if connection:
-            data_dum = {"username" : username , "password" : password}
-            d =  json.dumps(data_dum)
-            return d, dcc.Location(
-                id="redirect_to_db", pathname="/database-sucessful"
-            )
+            data_dum = {"username": username, "password": password}
+            d = json.dumps(data_dum)
+            return d, dcc.Location(id="redirect_to_db", pathname="/database-sucessful")
         else:
             d = json.dumps(data_dum)
             return d, "connection_failed"

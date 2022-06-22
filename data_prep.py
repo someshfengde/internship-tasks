@@ -20,15 +20,6 @@ def read_and_return_data():
     return data
 
 
-# function to connect to database
-def connect_to_db():
-    mydb = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        passwd="NewPassword",
-        database="new_database",
-    )   
-    return mydb
 
 
 def preprocess_data(data):
@@ -41,8 +32,9 @@ def preprocess_data(data):
 
 # %%
 def execute_command(command, col_names_in_command=None):
-    mydb = connect_to_db()
+    mydb, conn = connect_to_db()
     mycursor = mydb.cursor()
+    mycursor.execute("use new_database")
     mycursor.execute(command)
     data = mycursor.fetchall()
     # encapsulate data into pandas dataframe
@@ -52,4 +44,24 @@ def execute_command(command, col_names_in_command=None):
     return data
 
 
+def connect_to_db(username="root", password="NewPassword", database= None):
+    try:
+        if database != None: 
+            mydb = mysql.connector.connect(
+                host = "localhost", 
+                user = username , 
+                passwd = password, 
+                database = database
+            )
+        else: 
+            mydb = mysql.connector.connect(
+                host="localhost",
+                user=username,
+                passwd=password,
+            )
+
+        print("connection_established")
+        return mydb, True
+    except:
+        return None, False
 

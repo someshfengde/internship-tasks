@@ -14,12 +14,12 @@ import plotly.graph_objs as go
 
 # creatgin the local server
 app = Dash(
-    __name__, external_stylesheets=["https://codepen.io/chriddyp/pen/bWLwgP.css"]
+    __name__, external_stylesheets=["https://codepen.io/chriddyp/pen/bWLwgP.css"], 
+    
 )
 
 
-app.layout = html.Div(
-    [
+app.layout = [
         html.H1("Dashboards for ap_status_rfclients"),
         dcc.RadioItems(
             ["RxBitRate", "TxBitRate","Throughput"],
@@ -65,7 +65,7 @@ app.layout = html.Div(
         html.Div(id="mean-value"),
         html.Div(id="median-value"),
     ]
-)
+
 
 
 @app.callback(
@@ -93,10 +93,6 @@ def change_graph(value, slider_val, start_date, end_date):
     data = preprocess_data(data)
 
     print(f"{data['AssociatedFrequency'].value_counts()}")
-    # # converting bit per second to megabyptes per second
-    # data["RxBitRate"] = data["RxBitRate"] / 1000
-    # data["TxBitRate"] = data["TxBitRate"] / 1000
-    # converting bit per second to megabyptes per second
     bit_rate_data = data[value].to_numpy()
     fig = px.histogram(bit_rate_data, x=bit_rate_data)  # , nbins=50)
     fig.update_layout(
@@ -151,7 +147,7 @@ def show_percentage_devices(selected_val, slider_val, start_date, end_date):
 
 
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run_server(debug=True, port = 8051)
 
 
 
