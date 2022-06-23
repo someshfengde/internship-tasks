@@ -4,7 +4,7 @@ networkx==2.6.3
 numpy==1.22.3
 pandas==1.4.2
 parallel_ssh==2.10.0
-paramiko==2.6.0
+paramiko==2.10.1
 pexpect==4.8.0
 plotly==5.7.0
 pssh==2.3.1
