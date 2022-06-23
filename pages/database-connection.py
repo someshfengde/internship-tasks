@@ -88,48 +88,72 @@ layout = html.Div(
 )
 
 all_vis_data = [
-    html.H1("Dashboards for ap_status_rfclients"),
-    dcc.RadioItems(
-        ["RxBitRate", "TxBitRate", "Throughput"],
-        id="demo-dropdown",
-        value="RxBitRate",
-        inline=True,
-    ),
-    html.H2("Select range to visualize data"),
-    dcc.DatePickerRange(
-        id="my-date-picker-range",
-        min_date_allowed=date(1999, 6, 7),
-        max_date_allowed=date(2022, 6, 16),
-        initial_visible_month=date(2022, 6, 7),
-        start_date=date(2022, 6, 7),
-        end_date=date(2022, 6, 16),
-    ),
-    html.Div(
+    dbc.Row(
         [
-            html.Div(
+            html.H1("Dashboards for ap_status_rfclients"),
+            html.Br(),
+            dcc.RadioItems(
+                ["RxBitRate", "TxBitRate", "Throughput"],
+                id="demo-dropdown",
+                value="RxBitRate",
+                inline=True,
+            ),
+            html.Br(),
+        ]
+    ),
+    dbc.Row(
+        [
+            html.Br(),
+            html.H2("Select range to visualize data"),
+            dcc.DatePickerRange(
+                id="my-date-picker-range",
+                min_date_allowed=date(1999, 6, 7),
+                max_date_allowed=date(2022, 6, 16),
+                initial_visible_month=date(2022, 6, 7),
+                start_date=date(2022, 6, 7),
+                end_date=date(2022, 6, 16),
+            ),
+        ]
+    ),
+    dbc.Row(
+        [
+            dbc.Col(
                 [
                     dcc.Graph(id="template-x-graph"),
                 ],
-                className="eight columns",
+                # className="four columns",
+                width="8",
             ),
             # displaying dataframe in plotly
-            html.Div(dcc.Graph(id="percentage-indicator"), className="four columns"),
+            dbc.Col(
+                dcc.Graph(id="percentage-indicator"),
+                # className="four columns"
+                width="4",
+            ),
         ],
     ),
-    html.H2("Select the threshhold value"),
-    dcc.Slider(
-        id="slider-input-to-graph",
-        min=0,
-        max=90,
-        value=10,
-        step=10,
+    dbc.Row(
+        [
+            html.H2("Select the threshhold value"),
+            dcc.Slider(
+                id="slider-input-to-graph",
+                min=0,
+                max=90,
+                value=10,
+                step=10,
+            ),
+        ]
     ),
-    html.H1("Observed metric values"),
-    html.Div(id="min-value"),
-    html.Div(id="max-value"),
-    html.Div(id="std-value"),
-    html.Div(id="mean-value"),
-    html.Div(id="median-value"),
+    dbc.Row(
+        [
+            html.H1("Observed metric values"),
+            html.Div(id="min-value"),
+            html.Div(id="max-value"),
+            html.Div(id="std-value"),
+            html.Div(id="mean-value"),
+            html.Div(id="median-value"),
+        ]
+    ),
 ]
 
 
