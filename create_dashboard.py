@@ -14,58 +14,55 @@ import plotly.graph_objs as go
 
 # creatgin the local server
 app = Dash(
-    __name__, external_stylesheets=["https://codepen.io/chriddyp/pen/bWLwgP.css"], 
-    
+    __name__,
+    external_stylesheets=["https://codepen.io/chriddyp/pen/bWLwgP.css"],
 )
 
 
 app.layout = [
-        html.H1("Dashboards for ap_status_rfclients"),
-        dcc.RadioItems(
-            ["RxBitRate", "TxBitRate","Throughput"],
-            id="demo-dropdown",
-            value="RxBitRate",
-            inline=True,
-        ),
-        html.H2("Select range to visualize data"),
-        dcc.DatePickerRange(
-            id="my-date-picker-range",
-            min_date_allowed=date(2022, 6, 7),
-            max_date_allowed=date(2022, 6, 16),
-            initial_visible_month=date(2022, 6, 7),
-            start_date=date(2022, 6, 7),
-            end_date=date(2022, 6, 16),
-        ),
-        html.Div(
-            [
-                html.Div(
-                    [
-                        dcc.Graph(id="template-x-graph"),
-                    ],
-                    className="eight columns",
-                ),
-                # displaying dataframe in plotly
-                html.Div(
-                    dcc.Graph(id="percentage-indicator"), className="four columns"
-                ),
-            ],
-        ),
-        html.H2("Select the threshhold value"),
-        dcc.Slider(
-            id="slider-input-to-graph",
-            min=0,
-            max=90,
-            value=10,
-            step=10,
-        ),
-        html.H1("Observed metric values"),
-        html.Div(id="min-value"),
-        html.Div(id="max-value"),
-        html.Div(id="std-value"),
-        html.Div(id="mean-value"),
-        html.Div(id="median-value"),
-    ]
-
+    html.H1("Dashboards for ap_status_rfclients"),
+    dcc.RadioItems(
+        ["RxBitRate", "TxBitRate", "Throughput"],
+        id="demo-dropdown",
+        value="RxBitRate",
+        inline=True,
+    ),
+    html.H2("Select range to visualize data"),
+    dcc.DatePickerRange(
+        id="my-date-picker-range",
+        min_date_allowed=date(2022, 6, 7),
+        max_date_allowed=date(2022, 6, 16),
+        initial_visible_month=date(2022, 6, 7),
+        start_date=date(2022, 6, 7),
+        end_date=date(2022, 6, 16),
+    ),
+    html.Div(
+        [
+            html.Div(
+                [
+                    dcc.Graph(id="template-x-graph"),
+                ],
+                className="eight columns",
+            ),
+            # displaying dataframe in plotly
+            html.Div(dcc.Graph(id="percentage-indicator"), className="four columns"),
+        ],
+    ),
+    html.H2("Select the threshhold value"),
+    dcc.Slider(
+        id="slider-input-to-graph",
+        min=0,
+        max=90,
+        value=10,
+        step=10,
+    ),
+    html.H1("Observed metric values"),
+    html.Div(id="min-value"),
+    html.Div(id="max-value"),
+    html.Div(id="std-value"),
+    html.Div(id="mean-value"),
+    html.Div(id="median-value"),
+]
 
 
 @app.callback(
@@ -88,7 +85,14 @@ def change_graph(value, slider_val, start_date, end_date):
     command = f"select MacAddress,RxBitRate,TxBitRate,CheckinTime,Throughput,AssociatedFrequency from ap_status_rfclients WHERE CheckinTime BETWEEN '{start_date} 00:00:00' AND '{end_date} 23:59:59' "
     data = execute_command(
         command,
-        ["MacAddress", "RxBitRate", "TxBitRate", "CheckinTime","Throughput","AssociatedFrequency"],
+        [
+            "MacAddress",
+            "RxBitRate",
+            "TxBitRate",
+            "CheckinTime",
+            "Throughput",
+            "AssociatedFrequency",
+        ],
     )
     data = preprocess_data(data)
 
@@ -147,7 +151,4 @@ def show_percentage_devices(selected_val, slider_val, start_date, end_date):
 
 
 if __name__ == "__main__":
-    app.run_server(debug=True, port = 8051)
-
-
-
+    app.run_server(debug=True, port=8051)

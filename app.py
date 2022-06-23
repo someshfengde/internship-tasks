@@ -7,30 +7,29 @@ dbc_css = (
 )
 
 app = Dash(
-    __name__, use_pages=True, external_stylesheets=[dbc.themes.SKETCHY, dbc_css], suppress_callback_exceptions=True
+    __name__,
+    use_pages=True,
+    external_stylesheets=[dbc.themes.SKETCHY, dbc_css],
+    suppress_callback_exceptions=True,
 )
 # change name and emoji of dash app
 app.title = "Visualizing database data"
-pages_things =  html.Div(
-            [
-                html.Div(
-                    dcc.Link(
-                        f"{page['name']} - {page['path']}", href=page["relative_path"]
-                    )
-                , hidden= True
-                )
-                for page in dash.page_registry.values()
-                
-            ]
+pages_things = html.Div(
+    [
+        html.Div(
+            dcc.Link(f"{page['name']} - {page['path']}", href=page["relative_path"]),
+            hidden=True,
         )
+        for page in dash.page_registry.values()
+    ]
+)
 app.layout = html.Div(
     [
-        pages_things, 
-        dcc.Store(id="store-data",storage_type='session'),
+        pages_things,
+        dcc.Store(id="store-data", storage_type="session"),
         dash.page_container,
-          
     ]
 )
 
 if __name__ == "__main__":
-    app.run_server(debug=True,threaded=True)
+    app.run_server(debug=True, threaded=True)

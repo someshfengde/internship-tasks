@@ -104,11 +104,11 @@ required_val()
     },
 }
 
-# extract unique mac ids and ip addresses from scan 
+# extract unique mac ids and ip addresses from scan
 def get_mac_ip_from_scan(scan):
     mac_ip = []
     for host in scan:
         mac_ip.append(host)
-        for addr in scan[host]['addresses']:
-            mac_ip.append(scan[host]['addresses'][addr])
+        for addr in scan[host]["addresses"]:
+            mac_ip.append(scan[host]["addresses"][addr])
     return mac_ip

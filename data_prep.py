@@ -2,6 +2,7 @@
 import pandas as pd
 import numpy as np
 from pyparsing import col
+
 # connect to mysql dataset
 import mysql.connector
 import pandas as pd
@@ -20,8 +21,6 @@ def read_and_return_data():
     return data
 
 
-
-
 def preprocess_data(data):
     data["TxBitRate"].replace([r"\N", r"\\N", r"\\N\\N"], np.nan, inplace=True)
     data["RxBitRate"].replace([r"\N", r"\\N", r"\\N\\N"], np.nan, inplace=True)
@@ -29,6 +28,7 @@ def preprocess_data(data):
     data["RxBitRate"] = data["RxBitRate"].astype(float)
 
     return data
+
 
 # %%
 def execute_command(command, col_names_in_command=None):
@@ -44,16 +44,13 @@ def execute_command(command, col_names_in_command=None):
     return data
 
 
-def connect_to_db(username="root", password="NewPassword", database= None):
+def connect_to_db(username="root", password="NewPassword", database=None):
     try:
-        if database != None: 
+        if database != None:
             mydb = mysql.connector.connect(
-                host = "localhost", 
-                user = username , 
-                passwd = password, 
-                database = database
+                host="localhost", user=username, passwd=password, database=database
             )
-        else: 
+        else:
             mydb = mysql.connector.connect(
                 host="localhost",
                 user=username,
@@ -64,4 +61,3 @@ def connect_to_db(username="root", password="NewPassword", database= None):
         return mydb, True
     except:
         return None, False
-
