@@ -2,7 +2,7 @@
 # Info about the repo: 
 > This is repo I've created to mangae the tasks I've done in my internship at Indio Networks 
 
-## **Overview of the tasks:**
+<!-- ## **Overview of the tasks:** -->
 
 ## Dash application for visualizing Mysql data
 This is in progress application I'm creating this application for visualizing various columns in our organizations database. 

@@ -54,6 +54,7 @@ form = (
                 dbc.Input(type="password", placeholder="Enter password", id="password"),
                 className="me-3",
             ),
+            html.Br(),
             dbc.Row(dbc.Button("submit", color="primary", id="submit-button")),
         ],
         className="g-2",

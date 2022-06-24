@@ -4,6 +4,7 @@ import plotly.express as px
 import pandas as pd
 import json
 import dash_bootstrap_components as dbc
+from dash_bootstrap_templates import ThemeChangerAIO, template_from_url
 from data_prep import *
 import pandas as pd
 from datetime import date
@@ -14,7 +15,7 @@ import plotly.express as px
 import plotly.graph_objs as go
 
 
-dash.register_page(__name__, path="/database-sucessful")
+dash.register_page(__name__, path="/database-sucessful", theme=dbc.themes.SKETCHY)
 
 
 selection_card = dbc.Col(
@@ -43,12 +44,29 @@ selection_card = dbc.Col(
                     ]
                 )
             ),
-            dbc.Button(
-                "visualize !",
-                color="primary",
-                className="mb-2",
-                id="command-vis",
-                n_clicks=0,
+            dbc.Row(
+                [
+                    dbc.Col(
+                        dbc.Button(
+                            "visualize !",
+                            color="primary",
+                            className="mb-2 align-center",
+                            id="command-vis",
+                            n_clicks=0,
+                        ),
+                        className="d-grid gap-2 col-5 mx-auto",
+                    ),
+                    dbc.Col(
+                        dbc.Button(
+                            "Describe datatable",
+                            color="primary",
+                            className="mb-2",
+                            id="command-describe",
+                            n_clicks=0,
+                        ),
+                        className="d-grid gap-2 col-5 mx-auto",
+                    ),
+                ],
             ),
         ],
     ),
@@ -61,7 +79,7 @@ layout = html.Div(
         dbc.Row(
             html.H1(
                 id="dash_div",
-                children="This is our Analytics page",
+                children="Analytics page",
                 className=" text-black p-4 mb-2 text-left",
             )
         ),
@@ -84,13 +102,19 @@ layout = html.Div(
             size="sm",
             is_open=False,
         ),
+        html.Div(
+            id="desc-div",
+            children=[
+                dbc.Modal(id="desc-modal", children=[], is_open=False),
+            ],
+        ),
     ]
 )
 
 all_vis_data = [
     dbc.Row(
         [
-            html.H1("Dashboards for ap_status_rfclients"),
+            html.H1("Dashboards for ap_status_rfclients", id = "dashboard-main-title"),
             html.Br(),
             dcc.RadioItems(
                 ["RxBitRate", "TxBitRate", "Throughput"],
@@ -157,6 +181,9 @@ all_vis_data = [
 ]
 
 
+# main dashboard
+
+
 @callback(
     [
         Output("template-x-graph", "figure"),
@@ -174,21 +201,12 @@ all_vis_data = [
     ],
 )
 def change_graph(value, slider_val, start_date, end_date):
-    command = f"select MacAddress,RxBitRate,TxBitRate,CheckinTime,Throughput,AssociatedFrequency from ap_status_rfclients WHERE CheckinTime BETWEEN '{start_date} 00:00:00' AND '{end_date} 23:59:59' "
+    command = f"select MacAddress,RxBitRate,TxBitRate,CheckinTime from ap_status_rfclients WHERE CheckinTime BETWEEN '{start_date} 00:00:00' AND '{end_date} 23:59:59' "
     data = execute_command(
         command,
-        [
-            "MacAddress",
-            "RxBitRate",
-            "TxBitRate",
-            "CheckinTime",
-            "Throughput",
-            "AssociatedFrequency",
-        ],
+        ["MacAddress", "RxBitRate", "TxBitRate", "CheckinTime"],
     )
     data = preprocess_data(data)
-
-    print(f"{data['AssociatedFrequency'].value_counts()}")
     bit_rate_data = data[value].to_numpy()
     fig = px.histogram(bit_rate_data, x=bit_rate_data)  # , nbins=50)
     fig.update_layout(
@@ -239,6 +257,7 @@ def show_percentage_devices(selected_val, slider_val, start_date, end_date):
     return fig
 
 
+# database and datatable selection dropdown
 @callback(
     Output("table-container", "options"),
     [Input("store-data", "data")],
@@ -249,6 +268,8 @@ def update_output(data):
     curs = sql_obj.cursor()
     curs.execute("show databases")
     data = curs.fetchall()
+    curs.close()
+    sql_obj.close()
     databases_avail = [x[0] for x in data]
     return databases_avail
 
@@ -266,11 +287,13 @@ def show_datatables(selected_opt, creds):
     curs.execute(f"use {selected_opt}")
     curs.execute("show tables")
     data = curs.fetchall()
-    print(data)
+    curs.close()
+    sql_obj.close()
     tables_avail = [x[0] for x in data]
     return tables_avail
 
 
+# utils functions (Modal and hidden functionality)
 @callback(
     [Output("modal-sm", "is_open"), Output("vis-out", "children")],
     [
@@ -281,9 +304,89 @@ def show_datatables(selected_opt, creds):
     ],
 )
 def show_modal(is_clicked, selected_database, selected_table, modal_ip):
-    print(selected_table, selected_database)
+    """
+    This function is used to show the modal for the command visualization.
+
+    """
     if is_clicked and (selected_database == None or selected_table == None):
         modal_ip = not modal_ip
         return modal_ip, ""
     elif is_clicked and (selected_database != None and selected_table != None):
         return modal_ip, all_vis_data
+
+
+# callback for showing modal with datatable description
+@callback(
+    [
+        Output("desc-modal", "children"),
+        Output("desc-modal", "size"),
+        Output("desc-modal", "is_open"),
+    ],
+    [
+        Input("command-describe", "n_clicks"),
+        State("desc-modal", "is_open"),
+        Input("datatable-inputs", "value"),
+        Input("table-container", "value"),
+        Input("store-data", "data"),
+    ],
+)
+def show_modal_content(is_clicked, modal_ip, datatable, database, creds):
+    """
+    Inputs:
+        is_clicked: if the button for desc_datatable is clicked
+        modal_ip: if the modal is already open or not
+        database: selected database ( should not be equal to None for querying the database)
+        datatable: selected datatable ( should not be equal to None for querying the datatable)
+        creds: credentials for the database.
+    Outputs:
+        Shows modal with the proper description of the datatable.
+    """
+    if is_clicked and (database != None and datatable != None):
+        # loading the credentials
+        creds = json.loads(creds)
+        sql_obj, connected = connect_to_db(
+            username=creds["username"], password=creds["password"]
+        )  # setting up connection to the database
+        curs = sql_obj.cursor()  # getting cursor
+        curs.execute(f"use {database}")  # switching to selected database
+        curs.execute(f"desc {datatable}")  # executing query for collecting the data
+        data = curs.fetchall()  # fetching the output generated
+        data = pd.DataFrame(
+            data, columns=["Field", "Type", "Null", "Key", "Default", "Extra"]
+        )
+        curs.close()
+        sql_obj.close()  # closing the connections
+
+        # creating the table for the description
+        table = dash_table.DataTable(
+            id="table",
+            columns=[{"name": i, "id": i, "deletable": True} for i in data.columns],
+            data=data.to_dict("records"),
+            page_size=10,
+            editable=True,
+            cell_selectable=True,
+            filter_action="native",
+            sort_action="native",
+            style_table={"overflowX": "auto"},
+        )
+        children_components = [
+            dbc.ModalHeader(dbc.ModalTitle("DataTable Description")),
+            dbc.ModalBody(dbc.Row(table)),
+        ]
+        size = "xl"
+        toggle_modal = not modal_ip
+        return children_components, size, toggle_modal
+
+    elif is_clicked and (database == None or datatable == None):
+        children_components = [
+            dbc.ModalHeader(
+                dbc.ModalTitle(
+                    "You are trying to visualize datatable without selecting it first!!"
+                )
+            ),
+            dcc.Markdown("Please select the `Database` and `DataTable` first"),
+        ]
+        size = "md"
+        toggle_modal = not modal_ip
+        return children_components, size, toggle_modal
+
