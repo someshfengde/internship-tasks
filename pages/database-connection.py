@@ -30,7 +30,7 @@ selection_card = dbc.Col(
                                 html.H4(
                                     "Select database from list", className="card-title"
                                 ),
-                                dcc.Dropdown(id="table-container", className="p-4"),
+                                dcc.Dropdown(id="database-selection", className="p-4"),
                             ]
                         ),
                         dbc.Col(
@@ -38,7 +38,7 @@ selection_card = dbc.Col(
                                 html.H4(
                                     "Select Datatable from list", className="card-title"
                                 ),
-                                dcc.Dropdown(id="datatable-inputs", className="p-4"),
+                                dcc.Dropdown(id="datatable-selection", className="p-4"),
                             ]
                         ),
                     ]
@@ -114,7 +114,7 @@ layout = html.Div(
 all_vis_data = [
     dbc.Row(
         [
-            html.H1("Dashboards for ap_status_rfclients", id = "dashboard-main-title"),
+            html.H1(id = "dashboard-main-title"),
             html.Br(),
             dcc.RadioItems(
                 ["RxBitRate", "TxBitRate", "Throughput"],
@@ -162,7 +162,7 @@ all_vis_data = [
             dcc.Slider(
                 id="slider-input-to-graph",
                 min=0,
-                max=90,
+                max=1000,
                 value=10,
                 step=10,
             ),
@@ -183,10 +183,25 @@ all_vis_data = [
 
 # main dashboard
 
+@callback([
+    Output("dashboard-main-title", "children"), 
+    Input("datatable-selection", "value"),
+])
+def change_title(value):
+    """
+    Inupt:
+        datatable-selection value.
+    Output:
+        Changes the title of the dashboard
+    """
+    return [f"dashboard for {value}"]
+
+
 
 @callback(
     [
         Output("template-x-graph", "figure"),
+        Output("percentage-indicator", "figure"),
         Output("min-value", "children"),
         Output("max-value", "children"),
         Output("std-value", "children"),
@@ -198,17 +213,35 @@ all_vis_data = [
         Input("slider-input-to-graph", "value"),
         Input("my-date-picker-range", "start_date"),
         Input("my-date-picker-range", "end_date"),
+        Input("database-selection", "value"),
+        Input("datatable-selection", "value"), 
+        Input("store-data", "data")
     ],
 )
-def change_graph(value, slider_val, start_date, end_date):
-    command = f"select MacAddress,RxBitRate,TxBitRate,CheckinTime from ap_status_rfclients WHERE CheckinTime BETWEEN '{start_date} 00:00:00' AND '{end_date} 23:59:59' "
+def change_graph(value, slider_val, start_date, end_date,db , dt,  creds):
+    command = f"select MacAddress,RxBitRate,TxBitRate,Throughput,CheckinTime from {db}.{dt} WHERE CheckinTime BETWEEN '{start_date} 00:00:00' AND '{end_date} 23:59:59' "
+    creds = json.loads(creds)
+    sql_obj, connected = connect_to_db(
+        username=creds["username"], password=creds["password"]
+    )
     data = execute_command(
         command,
-        ["MacAddress", "RxBitRate", "TxBitRate", "CheckinTime"],
+        sql_obj,
+        ["MacAddress", "RxBitRate", "TxBitRate","Throughput","CheckinTime"],
     )
     data = preprocess_data(data)
-    bit_rate_data = data[value].to_numpy()
-    fig = px.histogram(bit_rate_data, x=bit_rate_data)  # , nbins=50)
+    value_counts_df = pd.DataFrame(data[value].value_counts())
+    color_col = []
+    for x in data[value]:
+        if int(x) < data[value].max() * 0.10:
+            color_col.append("red")
+        elif int(x) < data[value].max() * 0.50:
+            color_col.append("yellow")
+        else:
+            color_col.append("green")
+    data["color"] = color_col
+    print(data.head())
+    fig = px.bar(data , x = data[value].value_counts().keys(), y = value, color = "color" )  # , nbins=50)
     fig.update_layout(
         title_text=value,
         xaxis_title=f"{value}",  # x-axis label
@@ -221,8 +254,16 @@ def change_graph(value, slider_val, start_date, end_date):
         line_dash="dash",
         name="slider_val",
     )
+    percentage_devices = len(data[data[value] > slider_val]) / len(data)
+    # creating plotly pie chart for showing the percentage of devices
+    pie_fig = px.pie(
+        values=[percentage_devices, 1 - percentage_devices],
+        hole=0.4,
+        names=["receiving high speed", "lower speed than threshhold"],
+    )
     return (
         fig,
+        pie_fig,
         f"minimum {value} is {data[value].min()}",
         f"maximum for {value} is{data[value].max()}",
         f"standard deviation in {value} is {data[value].std()}",
@@ -231,35 +272,10 @@ def change_graph(value, slider_val, start_date, end_date):
     )
 
 
-@callback(
-    Output("percentage-indicator", "figure"),
-    [
-        Input("demo-dropdown", "value"),
-        Input("slider-input-to-graph", "value"),
-        Input("my-date-picker-range", "start_date"),
-        Input("my-date-picker-range", "end_date"),
-    ],
-)
-def show_percentage_devices(selected_val, slider_val, start_date, end_date):
-    command = f"select MacAddress,RxBitRate,TxBitRate,CheckinTime from ap_status_rfclients WHERE CheckinTime BETWEEN '{start_date} 00:00:00' AND '{end_date} 23:59:59' "
-    data = execute_command(
-        command,
-        ["MacAddress", "RxBitRate", "TxBitRate", "CheckinTime"],
-    )
-    data = preprocess_data(data)
-    percentage_devices = len(data[data[selected_val] > slider_val]) / len(data)
-    # creating plotly pie chart for showing the percentage of devices
-    fig = px.pie(
-        values=[percentage_devices, 1 - percentage_devices],
-        hole=0.4,
-        names=["receiving high speed", "lower speed than threshhold"],
-    )
-    return fig
-
 
 # database and datatable selection dropdown
 @callback(
-    Output("table-container", "options"),
+    Output("database-selection", "options"),
     [Input("store-data", "data")],
 )
 def update_output(data):
@@ -275,8 +291,8 @@ def update_output(data):
 
 
 @callback(
-    Output("datatable-inputs", "options"),
-    [Input("table-container", "value"), Input("store-data", "data")],
+    Output("datatable-selection", "options"),
+    [Input("database-selection", "value"), Input("store-data", "data")],
 )
 def show_datatables(selected_opt, creds):
     creds = json.loads(creds)
@@ -298,8 +314,8 @@ def show_datatables(selected_opt, creds):
     [Output("modal-sm", "is_open"), Output("vis-out", "children")],
     [
         Input("command-vis", "n_clicks"),
-        Input("datatable-inputs", "value"),
-        Input("table-container", "value"),
+        Input("datatable-selection", "value"),
+        Input("database-selection", "value"),
         State("modal-sm", "is_open"),
     ],
 )
@@ -325,8 +341,8 @@ def show_modal(is_clicked, selected_database, selected_table, modal_ip):
     [
         Input("command-describe", "n_clicks"),
         State("desc-modal", "is_open"),
-        Input("datatable-inputs", "value"),
-        Input("table-container", "value"),
+        Input("datatable-selection", "value"),
+        Input("database-selection", "value"),
         Input("store-data", "data"),
     ],
 )

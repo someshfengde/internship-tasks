@@ -31,10 +31,8 @@ def preprocess_data(data):
 
 
 # %%
-def execute_command(command, col_names_in_command=None):
-    mydb, conn = connect_to_db()
-    mycursor = mydb.cursor()
-    mycursor.execute("use new_database")
+def execute_command(command, conn, col_names_in_command=None):
+    mycursor = conn.cursor()
     mycursor.execute(command)
     data = mycursor.fetchall()
     # encapsulate data into pandas dataframe
