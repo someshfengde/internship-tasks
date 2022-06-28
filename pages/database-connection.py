@@ -9,7 +9,7 @@ from data_prep import *
 import pandas as pd
 from datetime import date
 import matplotlib.pyplot as plt
-
+import plotly.graph_objects as go 
 # setting up the data
 import plotly.express as px
 import plotly.graph_objs as go
@@ -87,6 +87,7 @@ layout = html.Div(
             selection_card,
         ),
         dbc.Row(id="vis-out"),
+
         dbc.Modal(
             [
                 dbc.ModalHeader(
@@ -164,7 +165,7 @@ all_vis_data = [
                 min=0,
                 max=1000,
                 value=10,
-                step=10,
+                step=50,
             ),
         ]
     ),
@@ -178,6 +179,9 @@ all_vis_data = [
             html.Div(id="median-value"),
         ]
     ),
+    dbc.Row([
+    dcc.Dropdown(id = "client-id-select", multi = True),
+    dcc.Graph(id="timeframe-out"),])
 ]
 
 
@@ -230,18 +234,7 @@ def change_graph(value, slider_val, start_date, end_date,db , dt,  creds):
         ["MacAddress", "RxBitRate", "TxBitRate","Throughput","CheckinTime"],
     )
     data = preprocess_data(data)
-    value_counts_df = pd.DataFrame(data[value].value_counts())
-    color_col = []
-    for x in data[value]:
-        if int(x) < data[value].max() * 0.10:
-            color_col.append("red")
-        elif int(x) < data[value].max() * 0.50:
-            color_col.append("yellow")
-        else:
-            color_col.append("green")
-    data["color"] = color_col
-    print(data.head())
-    fig = px.bar(data , x = data[value].value_counts().keys(), y = value, color = "color" )  # , nbins=50)
+    fig = px.histogram(data , x = data[value], nbins=100, color = value)
     fig.update_layout(
         title_text=value,
         xaxis_title=f"{value}",  # x-axis label
@@ -288,6 +281,44 @@ def update_output(data):
     sql_obj.close()
     databases_avail = [x[0] for x in data]
     return databases_avail
+
+
+# showing the rate changing as per time frame 
+@callback(
+    [Output("timeframe-out", "figure"), Output("client-id-select" , "options")], 
+    [Input("database-selection", "value"), Input("datatable-selection", "value"), Input("store-data", "data"), Input("client-id-select" , "value"),Input("demo-dropdown", "value"),],
+)
+def show_timewise_data(database , datatable , creds, selected_client, drop_value):
+    creds = json.loads(creds)
+    sql_obj, connected = connect_to_db(
+        username=creds["username"], password=creds["password"]
+    )
+    curs = sql_obj.cursor()
+    curs.execute(f"select * from {database}.{datatable}")
+    data = curs.fetchall()
+    curs.execute(f"desc {database}.{datatable}")
+    columns = [x[0] for x in curs.fetchall()]
+    curs.close()
+    sql_obj.close()
+    data = pd.DataFrame(data)
+    data.columns = columns
+    data['CheckinTime'] = pd.to_datetime(data['CheckinTime']) 
+
+    
+    if selected_client is not None: 
+        data_for_selected_client = data[data["MacAddress"].isin(selected_client)]
+        fig = px.scatter(data_for_selected_client , x = "CheckinTime" , y = drop_value , color = "MacAddress")
+        fig.update_layout(
+            title_text=f"{drop_value} for {selected_client}",
+            xaxis_title="Time",  # x-axis label
+            yaxis_title= drop_value,  # y-axis label
+        )
+    else : 
+        fig = go.Figure()
+    return fig, data["MacAddress"].unique().tolist()
+
+
+
 
 
 @callback(
