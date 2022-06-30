@@ -9,7 +9,8 @@ from data_prep import *
 import pandas as pd
 from datetime import date
 import matplotlib.pyplot as plt
-import plotly.graph_objects as go 
+import plotly.graph_objects as go
+
 # setting up the data
 import plotly.express as px
 import plotly.graph_objs as go
@@ -87,7 +88,6 @@ layout = html.Div(
             selection_card,
         ),
         dbc.Row(id="vis-out"),
-
         dbc.Modal(
             [
                 dbc.ModalHeader(
@@ -115,10 +115,10 @@ layout = html.Div(
 all_vis_data = [
     dbc.Row(
         [
-            html.H1(id = "dashboard-main-title"),
+            html.H1(id="dashboard-main-title"),
             html.Br(),
             dcc.RadioItems(
-                ["RxBitRate", "TxBitRate", "Throughput"],
+                ["RxBitRate", "TxBitRate", "Throughput", "RxBytes"],
                 id="demo-dropdown",
                 value="RxBitRate",
                 inline=True,
@@ -179,18 +179,36 @@ all_vis_data = [
             html.Div(id="median-value"),
         ]
     ),
-    dbc.Row([
-    dcc.Dropdown(id = "client-id-select", multi = True),
-    dcc.Graph(id="timeframe-out"),])
+    dbc.Row(
+        [
+            dcc.Dropdown(id="client-id-select", multi=True),
+            dbc.Col(
+                [
+                    html.H3("Vis for selected NAV value for unique MAC address "),
+                    dcc.Graph(id="timeframe-out"),
+                ], 
+                width = 6
+            ), 
+            dbc.Col([
+                    html.H3("Timewise variation of abs(RSSI) in unique MAC addresses"),
+                    dcc.Graph(id="selected-mac-RSSI"),
+            ],
+            width = 6
+            )
+        ]
+    ),
 ]
 
 
 # main dashboard
 
-@callback([
-    Output("dashboard-main-title", "children"), 
-    Input("datatable-selection", "value"),
-])
+
+@callback(
+    [
+        Output("dashboard-main-title", "children"),
+        Input("datatable-selection", "value"),
+    ]
+)
 def change_title(value):
     """
     Inupt:
@@ -199,7 +217,6 @@ def change_title(value):
         Changes the title of the dashboard
     """
     return [f"dashboard for {value}"]
-
 
 
 @callback(
@@ -218,12 +235,12 @@ def change_title(value):
         Input("my-date-picker-range", "start_date"),
         Input("my-date-picker-range", "end_date"),
         Input("database-selection", "value"),
-        Input("datatable-selection", "value"), 
-        Input("store-data", "data")
+        Input("datatable-selection", "value"),
+        Input("store-data", "data"),
     ],
 )
-def change_graph(value, slider_val, start_date, end_date,db , dt,  creds):
-    command = f"select MacAddress,RxBitRate,TxBitRate,Throughput,CheckinTime from {db}.{dt} WHERE CheckinTime BETWEEN '{start_date} 00:00:00' AND '{end_date} 23:59:59' "
+def change_graph(value, slider_val, start_date, end_date, db, dt, creds):
+    command = f"select MacAddress,RxBitRate,TxBitRate,Throughput,CheckinTime from {db}.{dt} WHERE TxBytes>5000 and CheckinTime BETWEEN '{start_date} 00:00:00' AND '{end_date} 23:59:59'  "
     creds = json.loads(creds)
     sql_obj, connected = connect_to_db(
         username=creds["username"], password=creds["password"]
@@ -231,10 +248,10 @@ def change_graph(value, slider_val, start_date, end_date,db , dt,  creds):
     data = execute_command(
         command,
         sql_obj,
-        ["MacAddress", "RxBitRate", "TxBitRate","Throughput","CheckinTime"],
+        ["MacAddress", "RxBitRate", "TxBitRate", "Throughput", "CheckinTime"],
     )
     data = preprocess_data(data)
-    fig = px.histogram(data , x = data[value], nbins=100, color = value)
+    fig = px.histogram(data, x=data[value], nbins=100, color=value, barmode="overlay")
     fig.update_layout(
         title_text=value,
         xaxis_title=f"{value}",  # x-axis label
@@ -265,7 +282,6 @@ def change_graph(value, slider_val, start_date, end_date,db , dt,  creds):
     )
 
 
-
 # database and datatable selection dropdown
 @callback(
     Output("database-selection", "options"),
@@ -283,18 +299,24 @@ def update_output(data):
     return databases_avail
 
 
-# showing the rate changing as per time frame 
+# showing the rate changing as per time frame
 @callback(
-    [Output("timeframe-out", "figure"), Output("client-id-select" , "options")], 
-    [Input("database-selection", "value"), Input("datatable-selection", "value"), Input("store-data", "data"), Input("client-id-select" , "value"),Input("demo-dropdown", "value"),],
+    [Output("timeframe-out", "figure"), Output("client-id-select", "options"), Output("selected-mac-RSSI", "figure")],
+    [
+        Input("database-selection", "value"),
+        Input("datatable-selection", "value"),
+        Input("store-data", "data"),
+        Input("client-id-select", "value"),
+        Input("demo-dropdown", "value"),
+    ],
 )
-def show_timewise_data(database , datatable , creds, selected_client, drop_value):
+def show_timewise_data(database, datatable, creds, selected_client, drop_value):
     creds = json.loads(creds)
     sql_obj, connected = connect_to_db(
         username=creds["username"], password=creds["password"]
     )
     curs = sql_obj.cursor()
-    curs.execute(f"select * from {database}.{datatable}")
+    curs.execute(f"select * from {database}.{datatable} ")  # where TxBytes>5000
     data = curs.fetchall()
     curs.execute(f"desc {database}.{datatable}")
     columns = [x[0] for x in curs.fetchall()]
@@ -302,23 +324,24 @@ def show_timewise_data(database , datatable , creds, selected_client, drop_value
     sql_obj.close()
     data = pd.DataFrame(data)
     data.columns = columns
-    data['CheckinTime'] = pd.to_datetime(data['CheckinTime']) 
+    data["CheckinTime"] = pd.to_datetime(data["CheckinTime"])
 
-    
-    if selected_client is not None: 
+    if selected_client is not None:
         data_for_selected_client = data[data["MacAddress"].isin(selected_client)]
-        fig = px.scatter(data_for_selected_client , x = "CheckinTime" , y = drop_value , color = "MacAddress")
+        fig = px.scatter(
+            data_for_selected_client, x="CheckinTime", y=drop_value, color="MacAddress"
+        )
         fig.update_layout(
             title_text=f"{drop_value} for {selected_client}",
             xaxis_title="Time",  # x-axis label
-            yaxis_title= drop_value,  # y-axis label
+            yaxis_title=drop_value,  # y-axis label
         )
-    else : 
+
+        fig2 = px.scatter(data_for_selected_client, x="TxBytes", y="CheckinTime", color="MacAddress"    )# animation_frame = "CheckinTime",log_x=True,range_x=[min(data_for_selected_client["CheckinTime"]),max(data_for_selected_client["CheckinTime"])])
+    else:
         fig = go.Figure()
-    return fig, data["MacAddress"].unique().tolist()
-
-
-
+        fig2 = go.Figure()
+    return fig, data["MacAddress"].unique().tolist(), fig2
 
 
 @callback(
