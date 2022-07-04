@@ -44,9 +44,9 @@ submit_button = dbc.Row(
 form = (
     dbc.Row(
         [
-            dbc.Label("Email"),
+            dbc.Label("Username"),
             dbc.Row(
-                dbc.Input(type="username", placeholder="Enter email", id="username"),
+                dbc.Input(type="username", placeholder="Enter username", id="username"),
                 className="me-3",
             ),
             dbc.Label("Password"),

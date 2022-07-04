@@ -190,13 +190,19 @@ all_vis_data = [
                 width = 6
             ), 
             dbc.Col([
-                    html.H3("Timewise variation of abs(RSSI) in unique MAC addresses"),
+                    html.H3("Rx vs Tx bytes"),
                     dcc.Graph(id="selected-mac-RSSI"),
             ],
             width = 6
             )
         ]
     ),
+    dbc.Row(
+        [
+            html.H3("Visualizing Rssi by grouping them and animating on the basis of time frame."),
+            dcc.Graph(id="rssi-by-time-frame"),
+        ]
+    )
 ]
 
 
@@ -337,7 +343,7 @@ def show_timewise_data(database, datatable, creds, selected_client, drop_value):
             yaxis_title=drop_value,  # y-axis label
         )
 
-        fig2 = px.scatter(data_for_selected_client, x="TxBytes", y="CheckinTime", color="MacAddress"    )# animation_frame = "CheckinTime",log_x=True,range_x=[min(data_for_selected_client["CheckinTime"]),max(data_for_selected_client["CheckinTime"])])
+        fig2 = px.scatter(data_for_selected_client, x="TxBytes", y="RxBytes", color="MacAddress"    )# animation_frame = "CheckinTime",log_x=True,range_x=[min(data_for_selected_client["CheckinTime"]),max(data_for_selected_client["CheckinTime"])])
     else:
         fig = go.Figure()
         fig2 = go.Figure()
@@ -361,6 +367,50 @@ def show_datatables(selected_opt, creds):
     sql_obj.close()
     tables_avail = [x[0] for x in data]
     return tables_avail
+
+@callback(
+    Output("rssi-by-time-frame", "figure"), 
+    [
+        Input("database-selection", "value"),
+        Input("datatable-selection", "value"),
+        Input("store-data", "data"),
+    ]
+)
+def rssi_changer(database, datatable , creds):
+    """
+    Creates the animated graphs for rssi with timeframe. 
+
+    Input: 
+        database : database name 
+        datatable : datatable selection 
+        creds : Credentials for the database
+    
+    Output:
+        fig : figure for rssi with timeframe 
+    """
+    creds = json.loads(creds)
+    sql_obj, connected = connect_to_db(
+        username=creds["username"], password=creds["password"]
+    )
+    curs = sql_obj.cursor()
+    curs.execute(f"select SignalAverage, CheckinTime, MacAddress from {database}.{datatable} ")
+    data = curs.fetchall()
+    columns = ["SignalAverage", "CheckinTime", "MacAddress"]
+    curs.close()
+    sql_obj.close()
+    data = pd.DataFrame(data)
+    data.columns = columns
+    data["CheckinTime"] = pd.to_datetime(data["CheckinTime"])
+    data["Month"] = data["CheckinTime"].dt.month
+    # data = data.groupby([pd.cut(data["SignalAverage"], 4 ), data["CheckinTime"].dt.day]).size().reset_index(name = "Size")
+    fig = px.histogram(data ,x="SignalAverage", y = "Month") 
+    return fig
+
+
+
+
+
+
 
 
 # utils functions (Modal and hidden functionality)
