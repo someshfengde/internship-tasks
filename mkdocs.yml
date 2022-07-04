@@ -1,0 +1,5 @@
+site_name: dash-database-visualizer
+nav:
+    - Home: "README.md"
+    - About: about.md
+theme: readthedocs

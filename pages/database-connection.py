@@ -75,6 +75,8 @@ selection_card = dbc.Col(
 )
 
 
+
+
 layout = html.Div(
     children=[
         dbc.Row(
@@ -112,6 +114,7 @@ layout = html.Div(
     ]
 )
 
+
 all_vis_data = [
     dbc.Row(
         [
@@ -144,7 +147,12 @@ all_vis_data = [
         [
             dbc.Col(
                 [
-                    dcc.Graph(id="template-x-graph"),
+                    dbc.Tabs(
+                        [
+                            dbc.Tab([dcc.Graph(id="template-x-graph")], label = "figure")
+                            ,dbc.Tab(id = "table-1", label="Table")
+                        ]
+                        ),
                 ],
                 # className="four columns",
                 width="8",
@@ -200,7 +208,12 @@ all_vis_data = [
     dbc.Row(
         [
             html.H3("Visualizing Rssi by grouping them and animating on the basis of time frame."),
-            dcc.Graph(id="rssi-by-time-frame"),
+            dbc.Tabs(
+                        [
+                            dbc.Tab([dcc.Graph(id="rssi-by-time-frame")], label = "figure"),
+                            dbc.Tab(id = "rssi-table", label="Table")
+                        ]
+                        ),
         ]
     )
 ]
@@ -234,6 +247,7 @@ def change_title(value):
         Output("std-value", "children"),
         Output("mean-value", "children"),
         Output("median-value", "children"),
+        Output("table-1", "children")
     ],
     [
         Input("demo-dropdown", "value"),
@@ -277,6 +291,18 @@ def change_graph(value, slider_val, start_date, end_date, db, dt, creds):
         hole=0.4,
         names=["receiving high speed", "lower speed than threshhold"],
     )
+    # creating the table 
+    table = dash_table.DataTable(
+        id="table",
+        columns=[{"name": i, "id": i, "deletable": True} for i in data.columns],
+        data=data.to_dict("records"),
+        editable=True,
+        cell_selectable=True,
+        filter_action="native",
+        sort_action="native",
+        page_size=20,  # we have less data in this example, so setting to 20
+        style_table={'height': '400px', 'overflowY': 'auto'}
+    )
     return (
         fig,
         pie_fig,
@@ -285,6 +311,7 @@ def change_graph(value, slider_val, start_date, end_date, db, dt, creds):
         f"standard deviation in {value} is {data[value].std()}",
         f"mean for {value} is {data[value].mean()}",
         f"median for {value} is {data[value].median()}",
+        table
     )
 
 
@@ -369,7 +396,10 @@ def show_datatables(selected_opt, creds):
     return tables_avail
 
 @callback(
-    Output("rssi-by-time-frame", "figure"), 
+    [
+        Output("rssi-by-time-frame", "figure"),
+        Output("rssi-table" , "children"),
+    ], 
     [
         Input("database-selection", "value"),
         Input("datatable-selection", "value"),
@@ -386,7 +416,7 @@ def rssi_changer(database, datatable , creds):
         creds : Credentials for the database
     
     Output:
-        fig : figure for rssi with timeframe 
+        fig : figure for rssi with timeframe g
     """
     creds = json.loads(creds)
     sql_obj, connected = connect_to_db(
@@ -404,7 +434,19 @@ def rssi_changer(database, datatable , creds):
     data["Month"] = data["CheckinTime"].dt.month
     # data = data.groupby([pd.cut(data["SignalAverage"], 4 ), data["CheckinTime"].dt.day]).size().reset_index(name = "Size")
     fig = px.histogram(data ,x="SignalAverage", y = "Month") 
-    return fig
+        # creating the table 
+    table = dash_table.DataTable(
+        columns=[{"name": i, "id": i, "deletable": True} for i in data.columns],
+        data=data.to_dict("records"),
+        editable=True,
+        cell_selectable=True,
+        filter_action="native",
+        sort_action="native",
+        page_size=20,  # we have less data in this example, so setting to 20
+        style_table={'height': '400px', 'overflowY': 'auto'}
+
+    )
+    return fig, table
 
 
 
@@ -509,4 +551,14 @@ def show_modal_content(is_clicked, modal_ip, datatable, database, creds):
         size = "md"
         toggle_modal = not modal_ip
         return children_components, size, toggle_modal
+
+
+
+# take the values of rx bitrate and bin it on group of 4 
+# plot those binned values  in category of good medium and bad.
+# on x axis time 
+# on y axis there will be % of binned values in each category. 
+# ( time should be gruoped on 15 to 30 mins window.)
+
+#%%
 
