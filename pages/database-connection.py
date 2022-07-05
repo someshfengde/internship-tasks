@@ -1,3 +1,4 @@
+from inspect import stack
 import dash
 from dash import Dash, dcc, html, Input, Output, callback, dash_table, State
 import plotly.express as px
@@ -215,6 +216,17 @@ all_vis_data = [
                         ]
                         ),
         ]
+    ), 
+    dbc.Row(
+        [
+            html.H3("Timewise grouping and RSSI status (good, average, bad)"), 
+            dbc.Tabs(
+                        [
+                            dbc.Tab([dcc.Graph(id="rssi-stacked-graph")], label = "figure"),
+                            dbc.Tab(id = "rssi-stacked-table", label="Table")
+                        ]
+            )
+        ]
     )
 ]
 
@@ -399,6 +411,8 @@ def show_datatables(selected_opt, creds):
     [
         Output("rssi-by-time-frame", "figure"),
         Output("rssi-table" , "children"),
+        Output("rssi-stacked-graph", "figure"),
+        Output("rssi-stacked-table", "children")
     ], 
     [
         Input("database-selection", "value"),
@@ -430,6 +444,7 @@ def rssi_changer(database, datatable , creds):
     sql_obj.close()
     data = pd.DataFrame(data)
     data.columns = columns
+    data2 = data.copy()
     data["CheckinTime"] = pd.to_datetime(data["CheckinTime"])
     data["Month"] = data["CheckinTime"].dt.month
     # data = data.groupby([pd.cut(data["SignalAverage"], 4 ), data["CheckinTime"].dt.day]).size().reset_index(name = "Size")
@@ -446,7 +461,64 @@ def rssi_changer(database, datatable , creds):
         style_table={'height': '400px', 'overflowY': 'auto'}
 
     )
-    return fig, table
+    data2.CheckinTime = pd.to_datetime(data2["CheckinTime"])
+    data2["SignalAverageStats"] = pd.cut(data2.SignalAverage, bins=4, labels= ["Good", "Average" , "Bad" , "Very bad"])
+    print(pd.cut(data2.SignalAverage, bins=4, ))
+    print(f"overall there are {data2.SignalAverageStats.value_counts()}")
+    #grouping by 30 mins window 
+    data2.CheckinTime  = data2.CheckinTime.dt.strftime("%H:%M:%S")
+    data2.CheckinTime = pd.to_datetime(data2.CheckinTime)
+    data2["30min_window"] = data2.CheckinTime.dt.floor("30min")
+    # top 10 30 min winow wiht the most data 
+    # -20 to -50 : excellent 
+    # -50 to -65 : Good 
+    # -65 > -75 : Average 
+    # -75 > -85 : Poor
+    # -85 > -95 : Very poor
+    # bin on the 30 mins ( whatever the day is it doesn't matter )
+    top_10_30min_window = data2.groupby("30min_window").size().reset_index(name = "Size").sort_values(by = "Size", ascending = False).head(100)["30min_window"]
+    print(f"""{len(data2.groupby("30min_window").size().reset_index(name = "Size").sort_values(by = "Size", ascending = False))}""")
+    queried_data_df = pd.DataFrame(columns = ["TimeFrame", "Good", "Average", "Bad","total"])
+    dix_arr = []
+    for x in top_10_30min_window:
+        now_time_frame = x 
+        query_data = data2[data2["30min_window"] == x]["SignalAverageStats"].value_counts()
+        now_good = query_data["Good"]
+        now_bad = query_data["Bad"]
+        now_average = query_data["Average"]
+        now_very_bad = query_data["Very bad"]
+        now_total = now_good + now_bad + now_average + now_very_bad
+        dix = {"TimeFrame": now_time_frame, 
+            "Good": now_good, 
+            "Average":now_average ,
+            "Bad": now_bad, 
+            "total" : now_total 
+            }
+        dix_arr.append(dix)
+    queried_data_df = queried_data_df.append(dix_arr, ignore_index = True)
+    queried_data_df["TimeFrame"] = queried_data_df.TimeFrame.dt.strftime("%H:%M:%S")
+    fig_2 = go.Figure(go.Bar(x = queried_data_df["TimeFrame"], y = queried_data_df["Good"] , name = "Good", hovertemplate="Per: %{y:.1%}",),)
+    fig_2.add_trace(go.Bar(x = queried_data_df["TimeFrame"], y = queried_data_df["Average"] , name = "Average",  hovertemplate="Per: %{y:.1%}"))
+    fig_2.add_trace(go.Bar(x = queried_data_df["TimeFrame"], y = queried_data_df["Bad"] , name = "Bad",  hovertemplate="Per: %{y:.1%}"))                                                                                          
+    fig_2.update_layout(barmode = "stack" )
+    
+    # take the values of RSSI and bin it on group of 4 
+    # plot those binned values  in category of good medium and bad.
+    # on x axis time 
+    # on y axis there will be % of binned values in each category. 
+    # ( time should be gruoped on 15 to 30 mins window.)
+    table_2 = dash_table.DataTable(
+        columns=[{"name": i, "id": i, "deletable": True} for i in queried_data_df.columns],
+        data=queried_data_df.to_dict("records"),
+        editable=True,
+        cell_selectable=True,
+        filter_action="native",
+        sort_action="native",
+        page_size=20,  # we have less data in this example, so setting to 20
+        style_table={'height': '400px', 'overflowY': 'auto'}
+    )
+
+    return fig, table, fig_2, table_2
 
 
 
@@ -554,11 +626,5 @@ def show_modal_content(is_clicked, modal_ip, datatable, database, creds):
 
 
 
-# take the values of rx bitrate and bin it on group of 4 
-# plot those binned values  in category of good medium and bad.
-# on x axis time 
-# on y axis there will be % of binned values in each category. 
-# ( time should be gruoped on 15 to 30 mins window.)
 
-#%%
 
