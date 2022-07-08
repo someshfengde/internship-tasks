@@ -76,8 +76,6 @@ selection_card = dbc.Col(
 )
 
 
-
-
 layout = html.Div(
     children=[
         dbc.Row(
@@ -150,10 +148,10 @@ all_vis_data = [
                 [
                     dbc.Tabs(
                         [
-                            dbc.Tab([dcc.Graph(id="template-x-graph")], label = "figure")
-                            ,dbc.Tab(id = "table-1", label="Table")
+                            dbc.Tab([dcc.Graph(id="template-x-graph")], label="figure"),
+                            dbc.Tab(id="table-1", label="Table"),
                         ]
-                        ),
+                    ),
                 ],
                 # className="four columns",
                 width="8",
@@ -195,39 +193,84 @@ all_vis_data = [
                 [
                     html.H3("Vis for selected NAV value for unique MAC address "),
                     dcc.Graph(id="timeframe-out"),
-                ], 
-                width = 6
-            ), 
-            dbc.Col([
+                ],
+                width=6,
+            ),
+            dbc.Col(
+                [
                     html.H3("Rx vs Tx bytes"),
                     dcc.Graph(id="selected-mac-RSSI"),
-            ],
-            width = 6
-            )
+                ],
+                width=6,
+            ),
         ]
     ),
     dbc.Row(
         [
-            html.H3("Visualizing Rssi by grouping them and animating on the basis of time frame."),
+            html.H3(
+                "Visualizing Rssi by grouping them and animating on the basis of time frame."
+            ),
             dbc.Tabs(
+                [
+                    dbc.Tab(
                         [
-                            dbc.Tab([dcc.Graph(id="rssi-by-time-frame")], label = "figure"),
-                            dbc.Tab(id = "rssi-table", label="Table")
-                        ]
-                        ),
+                            dcc.Graph(id="rssi-by-time-frame"),
+                        ],
+                        label="figure",
+                    ),
+                    dbc.Tab(id="rssi-table", label="Table"),
+                ]
+            ),
         ]
-    ), 
+    ),
     dbc.Row(
         [
-            html.H3("Timewise grouping and RSSI status (good, average, bad)"), 
+            html.H3("Timewise grouping and RSSI status (good, average, bad)"),
             dbc.Tabs(
+                [
+                    dbc.Tab(
                         [
-                            dbc.Tab([dcc.Graph(id="rssi-stacked-graph")], label = "figure"),
-                            dbc.Tab(id = "rssi-stacked-table", label="Table")
-                        ]
-            )
+                            dbc.Row(
+                                [
+                                    dbc.Col(
+                                        [
+                                            html.H3("Toggle percentage stack"), 
+                                            dbc.Checklist(
+                                                options=[
+                                                    {
+                                                        "label": "toogle percentage graph",
+                                                        "value": 1,
+                                                    },
+                                                ],
+                                                id="immersive-percentage-switch",
+                                                switch=True,
+                                            )
+                                        ]
+                                    ),
+                                    dbc.Col(
+                                        [
+                                            html.H3("Select the date:"), 
+                                            dcc.DatePickerRange(
+                                                id="date-picker-RSSI",
+                                                min_date_allowed=date(1999, 6, 7),
+                                                max_date_allowed=date(2022, 6, 16),
+                                                initial_visible_month=date(2022, 6, 7),
+                                                start_date=date(2022, 6, 7),
+                                                end_date=date(2022, 6, 16),
+                                            ),
+                                        ]
+                                    ),
+                                ]
+                            ),
+                            dcc.Graph(id="rssi-stacked-graph"),
+                        ],
+                        label="figure",
+                    ),
+                    dbc.Tab(id="rssi-stacked-table", label="Table"),
+                ]
+            ),
         ]
-    )
+    ),
 ]
 
 
@@ -259,7 +302,7 @@ def change_title(value):
         Output("std-value", "children"),
         Output("mean-value", "children"),
         Output("median-value", "children"),
-        Output("table-1", "children")
+        Output("table-1", "children"),
     ],
     [
         Input("demo-dropdown", "value"),
@@ -303,7 +346,7 @@ def change_graph(value, slider_val, start_date, end_date, db, dt, creds):
         hole=0.4,
         names=["receiving high speed", "lower speed than threshhold"],
     )
-    # creating the table 
+    # creating the table
     table = dash_table.DataTable(
         id="table",
         columns=[{"name": i, "id": i, "deletable": True} for i in data.columns],
@@ -313,7 +356,7 @@ def change_graph(value, slider_val, start_date, end_date, db, dt, creds):
         filter_action="native",
         sort_action="native",
         page_size=20,  # we have less data in this example, so setting to 20
-        style_table={'height': '400px', 'overflowY': 'auto'}
+        style_table={"height": "400px", "overflowY": "auto"},
     )
     return (
         fig,
@@ -323,7 +366,7 @@ def change_graph(value, slider_val, start_date, end_date, db, dt, creds):
         f"standard deviation in {value} is {data[value].std()}",
         f"mean for {value} is {data[value].mean()}",
         f"median for {value} is {data[value].median()}",
-        table
+        table,
     )
 
 
@@ -346,7 +389,11 @@ def update_output(data):
 
 # showing the rate changing as per time frame
 @callback(
-    [Output("timeframe-out", "figure"), Output("client-id-select", "options"), Output("selected-mac-RSSI", "figure")],
+    [
+        Output("timeframe-out", "figure"),
+        Output("client-id-select", "options"),
+        Output("selected-mac-RSSI", "figure"),
+    ],
     [
         Input("database-selection", "value"),
         Input("datatable-selection", "value"),
@@ -382,7 +429,9 @@ def show_timewise_data(database, datatable, creds, selected_client, drop_value):
             yaxis_title=drop_value,  # y-axis label
         )
 
-        fig2 = px.scatter(data_for_selected_client, x="TxBytes", y="RxBytes", color="MacAddress"    )# animation_frame = "CheckinTime",log_x=True,range_x=[min(data_for_selected_client["CheckinTime"]),max(data_for_selected_client["CheckinTime"])])
+        fig2 = px.scatter(
+            data_for_selected_client, x="TxBytes", y="RxBytes", color="MacAddress"
+        )  # animation_frame = "CheckinTime",log_x=True,range_x=[min(data_for_selected_client["CheckinTime"]),max(data_for_selected_client["CheckinTime"])])
     else:
         fig = go.Figure()
         fig2 = go.Figure()
@@ -407,37 +456,44 @@ def show_datatables(selected_opt, creds):
     tables_avail = [x[0] for x in data]
     return tables_avail
 
+
 @callback(
     [
         Output("rssi-by-time-frame", "figure"),
-        Output("rssi-table" , "children"),
+        Output("rssi-table", "children"),
         Output("rssi-stacked-graph", "figure"),
-        Output("rssi-stacked-table", "children")
-    ], 
+        Output("rssi-stacked-table", "children"),
+    ],
     [
         Input("database-selection", "value"),
         Input("datatable-selection", "value"),
         Input("store-data", "data"),
-    ]
+        Input("immersive-percentage-switch", "value"),
+        Input("date-picker-RSSI", "start_date"),
+        Input("date-picker-RSSI", "end_date"),
+    ],
 )
-def rssi_changer(database, datatable , creds):
+def rssi_changer(database, datatable, creds, percentage_switch, start_date, end_date):
     """
-    Creates the animated graphs for rssi with timeframe. 
+    Creates the animated graphs for rssi with timeframe.
 
-    Input: 
-        database : database name 
-        datatable : datatable selection 
+    Input:
+        database : database name
+        datatable : datatable selection
         creds : Credentials for the database
-    
+        percentage_switch : if the percentage switch is clicked
     Output:
         fig : figure for rssi with timeframe g
     """
+    print(percentage_switch)
     creds = json.loads(creds)
     sql_obj, connected = connect_to_db(
         username=creds["username"], password=creds["password"]
     )
     curs = sql_obj.cursor()
-    curs.execute(f"select SignalAverage, CheckinTime, MacAddress from {database}.{datatable} ")
+    curs.execute(
+        f"select SignalAverage, CheckinTime, MacAddress from {database}.{datatable} WHERE CheckinTime BETWEEN '{start_date} 00:00:00' AND '{end_date} 23:59:59' "
+    )
     data = curs.fetchall()
     columns = ["SignalAverage", "CheckinTime", "MacAddress"]
     curs.close()
@@ -448,8 +504,8 @@ def rssi_changer(database, datatable , creds):
     data["CheckinTime"] = pd.to_datetime(data["CheckinTime"])
     data["Month"] = data["CheckinTime"].dt.month
     # data = data.groupby([pd.cut(data["SignalAverage"], 4 ), data["CheckinTime"].dt.day]).size().reset_index(name = "Size")
-    fig = px.histogram(data ,x="SignalAverage", y = "Month") 
-        # creating the table 
+    fig = px.histogram(data, x="SignalAverage", y="Month")
+    # creating the table
     table = dash_table.DataTable(
         columns=[{"name": i, "id": i, "deletable": True} for i in data.columns],
         data=data.to_dict("records"),
@@ -458,73 +514,182 @@ def rssi_changer(database, datatable , creds):
         filter_action="native",
         sort_action="native",
         page_size=20,  # we have less data in this example, so setting to 20
-        style_table={'height': '400px', 'overflowY': 'auto'}
-
+        style_table={"height": "400px", "overflowY": "auto"},
     )
     data2.CheckinTime = pd.to_datetime(data2["CheckinTime"])
-    data2["SignalAverageStats"] = pd.cut(data2.SignalAverage, bins=4, labels= ["Good", "Average" , "Bad" , "Very bad"])
-    print(pd.cut(data2.SignalAverage, bins=4, ))
+    bins = pd.IntervalIndex.from_tuples(
+        [(-100, -75), (-75, -60), (-60, -45), (-45, -20)]
+    )
+    labels = ["Poor", "Average", "Good", "Excellent"]
+    d = dict(zip(bins, labels))
+    print(d)
+    data2["SignalAverageStats"] = pd.cut(
+        data2.SignalAverage, bins=bins, labels=labels, right=False
+    )
+    data2["SignalAverageStats"] = data2["SignalAverageStats"].map(d)
+    print(
+        pd.cut(
+            data2.SignalAverage,
+            bins=bins,
+        ).value_counts()
+    )
     print(f"overall there are {data2.SignalAverageStats.value_counts()}")
-    #grouping by 30 mins window 
-    data2.CheckinTime  = data2.CheckinTime.dt.strftime("%H:%M:%S")
+    # grouping by 30 mins window
+    data2.CheckinTime = data2.CheckinTime.dt.strftime("%H:%M:%S")
     data2.CheckinTime = pd.to_datetime(data2.CheckinTime)
     data2["30min_window"] = data2.CheckinTime.dt.floor("30min")
-    # top 10 30 min winow wiht the most data 
-    # -20 to -50 : excellent 
-    # -50 to -65 : Good 
-    # -65 > -75 : Average 
-    # -75 > -85 : Poor
-    # -85 > -95 : Very poor
+    # top 10 30 min winow wiht the most data
+    # -20 to -45 : excellent : Green
+    # -45 to -60 : Good : Yellow
+    # -60 > -75 : Average : Orange
+    # -75 > -100 : Poor : Red
     # bin on the 30 mins ( whatever the day is it doesn't matter )
-    top_10_30min_window = data2.groupby("30min_window").size().reset_index(name = "Size").sort_values(by = "Size", ascending = False).head(100)["30min_window"]
-    print(f"""{len(data2.groupby("30min_window").size().reset_index(name = "Size").sort_values(by = "Size", ascending = False))}""")
-    queried_data_df = pd.DataFrame(columns = ["TimeFrame", "Good", "Average", "Bad","total"])
+    top_10_30min_window = (
+        data2.groupby("30min_window")
+        .size()
+        .reset_index(name="Size")
+        .head(100)["30min_window"]
+    )
+    print(
+        f"""{len(data2.groupby("30min_window").size().reset_index(name = "Size").sort_values(by = "Size", ascending = False))}"""
+    )
+    queried_data_df = pd.DataFrame(
+        columns=["TimeFrame", "Good", "Average", "Poor", "Excellent", "total"]
+    )
     dix_arr = []
     for x in top_10_30min_window:
-        now_time_frame = x 
-        query_data = data2[data2["30min_window"] == x]["SignalAverageStats"].value_counts()
+        now_time_frame = x
+        query_data = data2[data2["30min_window"] == x][
+            "SignalAverageStats"
+        ].value_counts()
         now_good = query_data["Good"]
-        now_bad = query_data["Bad"]
+        now_bad = query_data["Poor"]
         now_average = query_data["Average"]
-        now_very_bad = query_data["Very bad"]
-        now_total = now_good + now_bad + now_average + now_very_bad
-        dix = {"TimeFrame": now_time_frame, 
-            "Good": now_good, 
-            "Average":now_average ,
-            "Bad": now_bad, 
-            "total" : now_total 
-            }
+        now_excellent = query_data["Excellent"]
+        now_total = now_good + now_bad + now_average + now_excellent
+        dix = {
+            "TimeFrame": now_time_frame,
+            "Good": now_good,
+            "Average": now_average,
+            "Poor": now_bad,
+            "Excellent": now_excellent,
+            "total": now_total,
+        }
         dix_arr.append(dix)
-    queried_data_df = queried_data_df.append(dix_arr, ignore_index = True)
+    queried_data_df = queried_data_df.append(dix_arr, ignore_index=True)
     queried_data_df["TimeFrame"] = queried_data_df.TimeFrame.dt.strftime("%H:%M:%S")
-    fig_2 = go.Figure(go.Bar(x = queried_data_df["TimeFrame"], y = queried_data_df["Good"] , name = "Good", hovertemplate="Per: %{y:.1%}",),)
-    fig_2.add_trace(go.Bar(x = queried_data_df["TimeFrame"], y = queried_data_df["Average"] , name = "Average",  hovertemplate="Per: %{y:.1%}"))
-    fig_2.add_trace(go.Bar(x = queried_data_df["TimeFrame"], y = queried_data_df["Bad"] , name = "Bad",  hovertemplate="Per: %{y:.1%}"))                                                                                          
-    fig_2.update_layout(barmode = "stack" )
-    
-    # take the values of RSSI and bin it on group of 4 
+    if percentage_switch:
+        fig_2 = go.Figure(
+            go.Bar(
+                x=queried_data_df["TimeFrame"],
+                y=(queried_data_df["Excellent"] / queried_data_df["total"]) * 100,
+                name="Excellent (-20, -45)",
+                marker_color="green",
+                # hovertemplate="Per: %{y:.1%}",
+                hoverinfo="text",
+                hovertext=(queried_data_df["Excellent"] / queried_data_df["total"])
+                * 100,
+            )
+        )
+        fig_2.add_trace(
+            go.Bar(
+                x=queried_data_df["TimeFrame"],
+                y=(queried_data_df["Good"] / queried_data_df["total"]) * 100,
+                name="Good (-60, -45)",
+                marker_color="yellow",
+                # hovertemplate="Per: %{y:.1%}",
+                hoverinfo="text",
+                hovertext=(queried_data_df["Good"] / queried_data_df["total"]) * 100,
+            ),
+        ),
+        fig_2.add_trace(
+            go.Bar(
+                x=queried_data_df["TimeFrame"],
+                y=(queried_data_df["Average"] / queried_data_df["total"]) * 100,
+                name="Average (-60,-75]",
+                marker_color="orange",
+                hoverinfo="text",
+                hovertext=(queried_data_df["Average"] / queried_data_df["total"]) * 100,
+            )
+        )
+        fig_2.add_trace(
+            go.Bar(
+                x=queried_data_df["TimeFrame"],
+                y=(queried_data_df["Poor"] / queried_data_df["total"]) * 100,
+                name="Poor (-75, -100]",
+                marker_color="red",
+                hoverinfo="text",
+                hovertext=(queried_data_df["Poor"] / queried_data_df["total"]) * 100,
+            )
+        )
+        fig_2.update_layout(barmode="stack")
+
+    else:
+        fig_2 = go.Figure(
+            go.Bar(
+                x=queried_data_df["TimeFrame"],
+                y=queried_data_df["Excellent"],
+                name="Excellent (-20, -45)",
+                marker_color="green",
+                # hovertemplate="Per: %{y:.1%}",
+                hoverinfo="text",
+                hovertext=(queried_data_df["Excellent"] / queried_data_df["total"])
+                * 100,
+            )
+        )
+        fig_2.add_trace(
+            go.Bar(
+                x=queried_data_df["TimeFrame"],
+                y=queried_data_df["Good"],
+                name="Good (-60, -45)",
+                marker_color="yellow",
+                # hovertemplate="Per: %{y:.1%}",
+                hoverinfo="text",
+                hovertext=(queried_data_df["Good"] / queried_data_df["total"]) * 100,
+            ),
+        ),
+        print((queried_data_df["Average"] / queried_data_df["total"]) * 100)
+        fig_2.add_trace(
+            go.Bar(
+                x=queried_data_df["TimeFrame"],
+                y=queried_data_df["Average"],
+                name="Average (-60,-75]",
+                marker_color="orange",
+                hoverinfo="text",
+                hovertext=(queried_data_df["Average"] / queried_data_df["total"]) * 100,
+            )
+        )
+        fig_2.add_trace(
+            go.Bar(
+                x=queried_data_df["TimeFrame"],
+                y=queried_data_df["Poor"],
+                name="Poor (-75, -100]",
+                marker_color="red",
+                hoverinfo="text",
+                hovertext=(queried_data_df["Poor"] / queried_data_df["total"]) * 100,
+            )
+        )
+        fig_2.update_layout(barmode="stack")
+
+    # take the values of RSSI and bin it on group of 4
     # plot those binned values  in category of good medium and bad.
-    # on x axis time 
-    # on y axis there will be % of binned values in each category. 
+    # on x axis time
+    # on y axis there will be % of binned values in each category.
     # ( time should be gruoped on 15 to 30 mins window.)
     table_2 = dash_table.DataTable(
-        columns=[{"name": i, "id": i, "deletable": True} for i in queried_data_df.columns],
+        columns=[
+            {"name": i, "id": i, "deletable": True} for i in queried_data_df.columns
+        ],
         data=queried_data_df.to_dict("records"),
         editable=True,
         cell_selectable=True,
         filter_action="native",
         sort_action="native",
         page_size=20,  # we have less data in this example, so setting to 20
-        style_table={'height': '400px', 'overflowY': 'auto'}
+        style_table={"height": "400px", "overflowY": "auto"},
     )
 
     return fig, table, fig_2, table_2
-
-
-
-
-
-
 
 
 # utils functions (Modal and hidden functionality)
@@ -623,8 +788,3 @@ def show_modal_content(is_clicked, modal_ip, datatable, database, creds):
         size = "md"
         toggle_modal = not modal_ip
         return children_components, size, toggle_modal
-
-
-
-
-
