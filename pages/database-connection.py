@@ -518,7 +518,7 @@ def rssi_changer(database, datatable, creds, percentage_switch, start_date, end_
     )
     data2.CheckinTime = pd.to_datetime(data2["CheckinTime"])
     bins = pd.IntervalIndex.from_tuples(
-        [(-100, -75), (-75, -60), (-60, -45), (-45, -20)]
+        [(-100, -81), (-80, -71), (-70, -56), (-55, -20)]
     )
     labels = ["Poor", "Average", "Good", "Excellent"]
     d = dict(zip(bins, labels))
@@ -606,7 +606,7 @@ def rssi_changer(database, datatable, creds, percentage_switch, start_date, end_
             go.Bar(
                 x=queried_data_df["TimeFrame"],
                 y=(queried_data_df["Average"] / queried_data_df["total"]) * 100,
-                name="Average (-60,-75]",
+                name="Average (-71,-80)",
                 marker_color="orange",
                 hoverinfo="text",
                 hovertext=(queried_data_df["Average"] / queried_data_df["total"]) * 100,
@@ -616,7 +616,7 @@ def rssi_changer(database, datatable, creds, percentage_switch, start_date, end_
             go.Bar(
                 x=queried_data_df["TimeFrame"],
                 y=(queried_data_df["Poor"] / queried_data_df["total"]) * 100,
-                name="Poor (-75, -100]",
+                name="Poor (-81, -100]",
                 marker_color="red",
                 hoverinfo="text",
                 hovertext=(queried_data_df["Poor"] / queried_data_df["total"]) * 100,

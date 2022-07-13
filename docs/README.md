@@ -15,6 +15,17 @@ This is in progress application I'm creating this application for visualizing va
 
 > requirements are listed in `requiremetns.txt` file.
 
+**for installation of the required libraries** 
+```
+# make sure you are in same directory as this file
+pip install -r requirements.txt
+```
+ 
+some more requirements for running this project: 
+1. mysql server installed on the machine 
+2. The datatable used for this visualizations is ap_status_rf_clients under new_database 
+3. the database dump file is included in the repo i.e ap_status_rfclientsdump.sql
+
 ## `ap_channel_allocation.py`
 I've developed this script which helps to optimize the random channel allocation happening in access points. This script also  contains code for visualizing the channel allocated to different access points. For seperate code for visualization please see  `net_vis.py`
 I've optimized channel for minimizing the interference between access points at the same time using as minimum channels for allocation as possible. 
