@@ -4,4 +4,10 @@ nav:
     - Implementation : "Implementation.md"
     - About: about.md
     
-theme: readthedocs
+theme: 
+    name: mkdocs
+    nav_style: dark
+    palette:
+        scheme: default
+    features:
+        - navigation.tabs
