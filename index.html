@@ -110,13 +110,15 @@
 <!-- ## **Overview of the tasks:** -->
 
 <h2 id="dash-application-for-visualizing-mysql-data">Dash application for visualizing Mysql data</h2>
-<p>This is in progress application I'm creating this application for visualizing various columns in our organizations database. 
-<strong>Main feaatures of this application:</strong> 
-* End to End database connectivity
-* Interactive graphs with plotly 
-* Ability to visualize multiple tables in multiple databases 
-* Customizable graphs
-* URL to application can be shared with other people.</p>
+<p>This is in progress application I'm creating this application for visualizing various columns in our organizations database. </p>
+<p><strong>Main feaatures of this application:</strong> </p>
+<ul>
+<li>End to End database connectivity</li>
+<li>Interactive graphs with plotly </li>
+<li>Ability to visualize multiple tables in multiple databases </li>
+<li>Customizable graphs</li>
+<li>URL to application can be shared with other people.</li>
+</ul>
 <blockquote>
 <p>requirements are listed in <code>requiremetns.txt</code> file.</p>
 </blockquote>
@@ -124,13 +126,17 @@
 <pre><code># make sure you are in same directory as this file
 pip install -r requirements.txt
 </code></pre>
-<p>some more requirements for running this project: 
-1. mysql server installed on the machine 
-2. The datatable used for this visualizations is ap_status_rf_clients under new_database 
-3. the database dump file is included in the repo i.e ap_status_rfclientsdump.sql</p>
+<p>some more requirements for running this project:</p>
+<ol>
+<li>mysql server installed on the machine </li>
+<li>The datatable used for this visualizations is ap_status_rf_clients under new_database </li>
+<li>the database dump file is included in the repo i.e ap_status_rfclientsdump.sql</li>
+</ol>
+<hr />
 <h2 id="ap_channel_allocationpy"><code>ap_channel_allocation.py</code></h2>
 <p>I've developed this script which helps to optimize the random channel allocation happening in access points. This script also  contains code for visualizing the channel allocated to different access points. For seperate code for visualization please see  <code>net_vis.py</code>
 I've optimized channel for minimizing the interference between access points at the same time using as minimum channels for allocation as possible. </p>
+<hr />
 <h2 id="ssh-access-with-python">SSH access with python:</h2>
 <ul>
 <li>In this task i've tried to connect access points and upgrading the access points firmwawre with help of shell commands in python </li>
@@ -226,5 +232,5 @@ I've optimized channel for minimizing the interference between access points at 
 
 <!--
 MkDocs version : 1.3.0
-Build Date UTC : 2022-07-13 11:06:49.768551+00:00
+Build Date UTC : 2022-07-20 19:18:49.612564+00:00
 -->
