@@ -4,7 +4,7 @@ dash==2.5.1
 dash_bootstrap_components==1.1.0
 dash_bootstrap_templates==1.0.5
 duty==0.7.0
-Flask==2.0.3
+Flask==2.3.2
 fsspec==2022.1.0
 matplotlib==3.5.1
 mysql_connector_repackaged==0.3.1
