@@ -9,5 +9,5 @@ pexpect==4.8.0
 plotly==5.7.0
 pssh==2.3.1
 requests==2.22.0
-torch==1.10.2+cu113
+torch==1.13.1
 tqdm==4.62.3
